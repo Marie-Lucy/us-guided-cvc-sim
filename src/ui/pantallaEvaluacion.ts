@@ -51,7 +51,7 @@ function veredicto(r: Resultado): 'good' | 'warn' | 'bad' {
 }
 
 // 'sorpresa': el paciente era sorpresa y recién ahora se revela cuál era
-export function mostrarEvaluacion(r: Resultado, c: Caso, sorpresa = false): void {
+export function mostrarEvaluacion(r: Resultado, c: Caso, sorpresa = false, demostracion = false): void {
   el('puntaje').textContent = String(r.puntaje);
   const v = el('veredicto');
   v.textContent = r.calificacion;
@@ -59,7 +59,8 @@ export function mostrarEvaluacion(r: Resultado, c: Caso, sorpresa = false): void
   el('titulo-evaluacion').textContent = r.exito
     ? (r.complicaciones.length ? 'Catéter en la vena, con complicaciones para revisar.' : 'Catéter en la vena, sin complicaciones.')
     : 'El procedimiento no se completó de forma segura.';
-  el('caso-evaluado').textContent = `${sorpresa ? 'Paciente sorpresa: era ' : ''}${c.nombre} · ${c.dificultad}`;
+  const origen = demostracion ? 'Demostración · ' : sorpresa ? 'Paciente sorpresa: era ' : '';
+  el('caso-evaluado').textContent = `${origen}${c.nombre} · ${c.dificultad}${demostracion ? ' · no se guarda en tu historial' : ''}`;
   el('items-evaluacion').replaceChildren(...items(r).map(item));
   el('claves-caso').textContent = `Claves de este paciente: ${c.claves}`;
   el('evaluacion').hidden = false;

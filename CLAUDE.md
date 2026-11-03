@@ -100,6 +100,7 @@ Cada regla viene de una diferencia real entre la yugular y la carótida o de có
 - **Trombo:** `Anatomia.trombo` da la fracción de la luz ocupada a cada altura (`ocupacionTrombo`), apoyada en la pared posterior (`enTrombo`, que el shader repite). Apertura = max(ley del tubo, ocupación); sin variación respiratoria ni Valsalva en el tramo ocupado; sin refuerzo posterior ni Doppler dentro del trombo; tienda de 0.6 mm sobre trombo; la punta dentro del trombo es `lugar = 'trombo'`, sin flash, evento `puncion_trombo` (grave).
 - **Paciente sorpresa:** `elegirSorpresa()` elige un caso al azar; mientras dura la partida ningún texto de la interfaz nombra al paciente real (barra superior, mentor, viñeta). Se revela en la evaluación y el historial guarda el caso real.
 - **Modo examen:** sin Doppler, etiquetas, esquema, tareas ni pistas; 8 minutos. Al agotarse, `terminar()` lleva a la evaluación y el tope sin éxito (40) se multiplica por pasos completados / 5. Cada intento (práctica o examen) se guarda en el historial; el mejor puntaje es solo de examen.
+- **Demostración:** `procedimiento/demo.ts` es un guion de pasos (`PASOS_DEMO`) que maneja el simulador a través de `DemoHost`, con velocidades en `config/demo.ts`. Hace el caso normal en práctica, sin complicaciones (lo verifica `tests/demo.test.ts`). Cualquier clic o tecla fuera del inicio y de la evaluación devuelve el control. Lo que empezó la demo no se guarda en el historial.
 - **Pacientes:** todo lo que cambia entre casos vive en la `Anatomia` (forma) y su `fisiologia` (presión venosa, amplitud respiratoria, tienda máxima). Ningún otro módulo pregunta qué caso es. Cada caso nuevo debe pasar el test de no solapamiento (en reposo y con Valsalva).
 - **Evaluación:** éxito = catéter en la vena, guía retirada y ninguna complicación grave. Puntaje sobre 100: −10 por pinchazo extra, −1 cada 30 s pasados los 5 min (tope 15), −40 grave, −20 moderada, −10 leve; sin éxito, máximo 40. Cada tipo de complicación cuenta una vez.
 - **Bordes de los instrumentos:** perfiles con borde nítido (`smoothstep`), nunca gaussianas anchas: con la compresión logarítmica una gaussiana se ve como un halo enorme.
@@ -124,7 +125,7 @@ Cada etapa deja algo jugable. Una etapa por sesión, un commit por etapa.
 
 Los detalles de cada etapa los da el usuario al inicio de cada sesión.
 
-**Estado actual:** las 8 etapas terminadas, interfaz con la identidad de `lab-sim`, más **modo examen** (`config/examen.ts`, `evaluacion/historial.ts`: sin ayudas, 8 min, historial y mejor puntaje en localStorage) y **paciente con trombosis** (`trombo` en la `Anatomia`). Próximos extras posibles: subclavia/femoral, aguja en plano como técnica propia.
+**Estado actual:** las 8 etapas terminadas, interfaz con la identidad de `lab-sim`, más **modo examen** (`config/examen.ts`, `evaluacion/historial.ts`: sin ayudas, 8 min, historial y mejor puntaje en localStorage) **paciente con trombosis** (`trombo` en la `Anatomia`), paciente sorpresa y **Ver una demostración primero** (`procedimiento/demo.ts`). Próximos extras posibles: subclavia/femoral, aguja en plano como técnica propia.
 
 ## Estilo visual
 

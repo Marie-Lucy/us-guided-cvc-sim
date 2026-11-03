@@ -85,6 +85,7 @@ const claseIntento = (i: Intento): string => (!i.exito ? 'bad' : i.puntaje >= UM
 
 export function prepararInicio(
   alEmpezar: (caso: EleccionCaso, modo: Modo) => void, historial: () => readonly Intento[],
+  alVerDemo: () => void,
 ): PantallaInicio {
   const capa = document.getElementById('inicio')!;
   capa.innerHTML = `
@@ -115,6 +116,7 @@ export function prepararInicio(
           <p class="ss-mode-note"></p>
           <div class="ss-cta">
             <button class="ss-pill ss-pill-dark ss-entrar">Entrar al simulador<span class="ss-arrow">${FLECHA}</span></button>
+            <button class="ss-pill ss-pill-light ss-demo">Ver una demostración primero<span class="ss-arrow green">${FLECHA}</span></button>
           </div>
           <p class="ss-ack">Al entrar aceptas que es solo para educación.</p>
           <label class="ss-no-mostrar"><input type="checkbox" class="ss-check-no-mostrar"> No mostrar al abrir</label>
@@ -246,6 +248,11 @@ export function prepararInicio(
   capa.querySelector('.ss-entrar')!.addEventListener('click', () => {
     capa.hidden = true;
     alEmpezar(elegido, modo);
+  });
+  // La demostración siempre es el paciente normal en modo práctica
+  capa.querySelector('.ss-demo')!.addEventListener('click', () => {
+    capa.hidden = true;
+    alVerDemo();
   });
   capa.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') capa.hidden = true;

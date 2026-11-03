@@ -42,6 +42,10 @@ Comparte la identidad visual de [Lab Theme](https://github.com/Marie-Lucy/lab-si
 | Variante anatómica | Avanzado | La yugular está encima de la carótida: atravesar la pared posterior es entrar a la arteria. |
 | Yugular trombosada | Avanzado | Un trombo oclusivo ocupa el tramo bajo y medio: la vena no colapsa, se ve gris por dentro, no tiene flujo ni refuerzo posterior. Hay que encontrar el tramo libre, más arriba. Puncionar el trombo no da flash y es una complicación grave. |
 
+### Ver una demostración primero
+
+En la portada, **Ver una demostración primero** hace el caso normal solo, paso a paso: explora, comprime, enciende el Doppler, punciona, pasa la guía, la confirma en eje largo, dilata y coloca el catéter. El mentor narra cada paso. Con cualquier clic o tecla tomas el control y sigues desde donde quedó. Al terminar se muestra la evaluación, que no se guarda en el historial.
+
 ### Práctica y examen
 
 En la pantalla de inicio se elige el modo:

@@ -60,6 +60,7 @@ import type { Corte } from './anatomia/anatomia';
 import { mostrarEvaluacion, ocultarEvaluacion } from './ui/pantallaEvaluacion';
 import { crearControlRendimiento } from './core/rendimiento';
 import { prepararInicio } from './ui/pantallaInicio';
+import { Demo, type DemoHost } from './procedimiento/demo';
 import { almacenLocal, leerHistorial, guardarIntento, mejorPuntaje, type Modo } from './evaluacion/historial';
 import { TIEMPO_LIMITE_EXAMEN_S, AVISO_TIEMPO_EXAMEN_S } from './config/examen';
 import { terminar } from './core/estado';
@@ -377,6 +378,7 @@ function mostrarHud(): void {
   // En el examen no hay tareas ni pistas: solo el reloj
   dibujarPasos(fase, tiemposPasos, examen ? [] : lista);
   if (examen) mostrarRelojExamen(paso);
+  else if (demo) dibujarMentor(paso, lista, { tipo: 'ok', texto: demo.narracion });
   else dibujarMentor(paso, lista, pista(paso, estado, motivo));
   barra.actualizar(fase, (p) => (fasesSiguientes().includes(p) ? motivoBloqueo(p) : 'Sigue el orden del procedimiento'));
   botonTerminar.hidden = fase !== 'cateter';
@@ -547,11 +549,17 @@ function prepararControlesSeldinger(): void {
   });
   accionConfirmar.addEventListener('click', () => {
     if (!seldinger) return;
-    const visible = dispositivoVisible(dispositivoActual(), planoActual(), corteEnSonda(obtenerSonda().posicionMm, obtenerEstado().tiempoTotal));
-    const motivo = confirmarGuia(seldinger, visible);
-    if (!motivo && obtenerSonda().orientacion === 'longitudinal') registro.confirmoEnEjeLargo = true;
-    mostrarMensaje(motivo ?? 'Guía confirmada en la imagen.');
+    mostrarMensaje(confirmarGuiaAhora() ?? 'Guía confirmada en la imagen.');
   });
+}
+
+// Confirma la guía si se ve en la imagen actual. Devuelve el motivo si no se pudo.
+function confirmarGuiaAhora(): string | null {
+  if (!seldinger) return 'No hay guía';
+  const visible = dispositivoVisible(dispositivoActual(), planoActual(), corteEnSonda(obtenerSonda().posicionMm, obtenerEstado().tiempoTotal));
+  const motivo = confirmarGuia(seldinger, visible);
+  if (!motivo && obtenerSonda().orientacion === 'longitudinal') registro.confirmoEnEjeLargo = true;
+  return motivo;
 }
 
 // Mueve lo que corresponda a la fase en este cuadro
@@ -595,11 +603,14 @@ function alCambiarDeFase(nueva: Fase = obtenerEstado().fase, anterior: Fase = nu
       pasosCompletados: PASOS.indexOf(anterior as Paso),
     });
     const mejorAntes = mejorPuntaje(leerHistorial(almacen), casoActual.id);
-    guardarIntento(almacen, {
-      caso: casoActual.id, modo, puntaje: resultado.puntaje, exito: resultado.exito,
-      calificacion: resultado.calificacion, fecha: Date.now(),
-    });
-    mostrarEvaluacion(resultado, casoActual, esSorpresa);
+    // Lo que hizo (o empezó) la demostración no cuenta como intento propio
+    if (!fueDemo) {
+      guardarIntento(almacen, {
+        caso: casoActual.id, modo, puntaje: resultado.puntaje, exito: resultado.exito,
+        calificacion: resultado.calificacion, fecha: Date.now(),
+      });
+    }
+    mostrarEvaluacion(resultado, casoActual, esSorpresa, fueDemo);
     mostrarMejorMarca(resultado.puntaje, mejorAntes);
   } else {
     ocultarEvaluacion();
@@ -640,6 +651,8 @@ function mostrarMejorMarca(puntaje: number, mejorAntes: number | null): void {
 }
 
 function elegirCaso(eleccion: EleccionCaso, nuevoModo: Modo = modo): void {
+  detenerDemo();
+  fueDemo = false;
   esSorpresa = eleccion === SORPRESA;
   casoActual = caso(eleccion === SORPRESA ? elegirSorpresa() : eleccion);
   modo = nuevoModo;
@@ -657,6 +670,88 @@ function prepararCasos(): void {
     inicio.abrir(esSorpresa ? SORPRESA : casoActual.id, modo);
   });
   elegirCaso(casoActual.id);
+}
+
+// ---- Demostración ----
+// Un piloto automático hace el caso normal en modo práctica, narrando cada paso.
+// Cualquier clic o tecla del usuario la detiene y le deja el control.
+let demo: Demo | null = null;
+let fueDemo = false; // la partida la empezó (o la hizo entera) la demostración
+
+const hostDemo: DemoHost = {
+  fase: () => obtenerEstado().fase,
+  irA: (f) => irA(f),
+  sonda: obtenerSonda,
+  moverSonda: (pos, lat) => moverSonda(pos, lat),
+  fijarCompresion: (v) => {
+    fijarCompresion(v);
+    sliderCompresion.value = String(Math.round(v * PORCENTAJE));
+  },
+  orientar: (o) => { if (obtenerSonda().orientacion !== o) rotarSonda(); },
+  doppler: (on) => {
+    casillaDoppler.checked = on;
+    cambiarDoppler(on);
+  },
+  etiquetas: (on) => {
+    casillaEtiquetas.checked = on;
+    cambiarEtiquetas(on);
+  },
+  corte: (z) => corteTransversal(z, obtenerEstado().tiempoTotal, { anatomia: casoActual.anatomia }),
+  aguja: () => aguja,
+  elegirEntrada: (x, z) => elegirEntrada(aguja, x, z),
+  cambiarAngulo: (g) => {
+    cambiarAngulo(aguja, g);
+    sliderAngulo.value = String(aguja.anguloGrados);
+  },
+  moverAguja: (mm) => moverAguja(aguja, mm, cortePorAltura(obtenerEstado().tiempoTotal)),
+  seldinger: () => seldinger,
+  moverGuia: (mm) => { if (seldinger) moverGuia(seldinger, mm); },
+  retirarAguja: () => { if (seldinger) retirarAguja(seldinger); },
+  confirmarGuia: confirmarGuiaAhora,
+  moverDilatador: (mm) => { if (seldinger) moverDilatador(seldinger, mm); },
+  moverCateter: (mm) => { if (seldinger) moverCateter(seldinger, mm); },
+  retirarGuia: () => { if (seldinger) retirarGuia(seldinger); },
+};
+
+function mostrarModoDemo(activa: boolean): void {
+  elemento('chip-demo').hidden = !activa;
+  const insignia = document.querySelector('#mentor .mentor-badge')!;
+  insignia.classList.toggle('demo', activa);
+  insignia.textContent = activa ? 'DEMO' : modo === 'examen' ? 'EXAMEN' : 'MENTOR';
+}
+
+function empezarDemo(): void {
+  elegirCaso('normal', 'practica');
+  fueDemo = true;
+  demo = new Demo(hostDemo);
+  mostrarModoDemo(true);
+  avisar('Demostración en curso. Haz clic o presiona una tecla para tomar el control.');
+}
+
+function detenerDemo(mensaje?: string): void {
+  if (!demo) return;
+  demo = null;
+  mostrarModoDemo(false);
+  if (mensaje) avisar(mensaje, 'ok');
+}
+
+// Al terminar el guion: se cierra el caso y se muestra la evaluación
+function terminarDemo(): void {
+  detenerDemo('Demostración terminada. Así se ve un procedimiento sin complicaciones.');
+  irA('evaluacion');
+}
+
+// Cualquier clic o tecla (fuera del inicio y de la evaluación) devuelve el control
+function prepararTomaDeControl(): void {
+  const enVentana = (e: Event): boolean => (e.target as HTMLElement).closest?.('#inicio, #evaluacion') !== null;
+  document.addEventListener('pointerdown', (e) => {
+    if (demo && !enVentana(e)) detenerDemo('Tienes el control. El caso continúa desde aquí.');
+  }, { capture: true });
+  window.addEventListener('keydown', (e) => {
+    if (!demo || enVentana(e)) return;
+    detenerDemo('Tienes el control. El caso continúa desde aquí.');
+    e.stopImmediatePropagation(); // esa tecla solo sirve para tomar el control
+  }, { capture: true });
 }
 
 // ---- Loop ----
@@ -678,6 +773,10 @@ function cuadro(instante: number): void {
   actualizarSonda(dt);
   actualizarValsalva(dt);
   moverHerramienta(dt);
+  if (demo) {
+    demo.actualizar(dt);
+    if (demo.terminada) terminarDemo();
+  }
   // Examen: al acabarse el tiempo, el caso se cierra donde esté
   if (modo === 'examen' && obtenerEstado().fase !== 'evaluacion' && tiempoRestante() === 0) {
     tiempoAgotado = true;
@@ -705,7 +804,8 @@ prepararControlesUS();
 prepararControlesAguja();
 prepararControlesSeldinger();
 prepararCondiciones();
-const inicio = prepararInicio(elegirCaso, () => leerHistorial(almacen));
+const inicio = prepararInicio(elegirCaso, () => leerHistorial(almacen), empezarDemo);
+prepararTomaDeControl();
 prepararCasos();
 prepararMentor();
 elemento('boton-ayuda').addEventListener('click', () => inicio.abrir(esSorpresa ? SORPRESA : casoActual.id, modo));
