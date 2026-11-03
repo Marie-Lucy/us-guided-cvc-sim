@@ -2,6 +2,7 @@
 
 import { PASOS, INFO_PASOS, type Paso, type Tarea, type Pista } from './guiaPasos';
 import type { Fase } from '../config/fases';
+import { t } from '../i18n';
 
 function el<T extends HTMLElement>(id: string): T {
   const e = document.getElementById(id);
@@ -66,7 +67,7 @@ export function prepararMentor(): void {
   boton.addEventListener('click', () => {
     const plegado = mentor.classList.toggle('collapsed');
     boton.textContent = plegado ? '+' : '–';
-    boton.setAttribute('aria-label', plegado ? 'Desplegar el mentor' : 'Plegar el mentor');
+    boton.setAttribute('aria-label', t(plegado ? 'mentor.desplegar' : 'mentor.plegar'));
   });
 }
 
@@ -74,7 +75,7 @@ let ultimoMentor = '';
 
 export function dibujarMentor(paso: Paso, tareasActuales: Tarea[], p: Pista): void {
   // Solo se toca el DOM si algo cambió (se llama en cada cuadro)
-  const clave = JSON.stringify([paso, tareasActuales, p]);
+  const clave = JSON.stringify([paso, tareasActuales, p, INFO_PASOS[paso].objetivo]);
   if (clave === ultimoMentor) return;
   ultimoMentor = clave;
   const info = INFO_PASOS[paso];
@@ -114,7 +115,7 @@ export function crearBarra(alElegir: (p: Paso) => void): BarraHerramientas {
     b.className = 'tool-btn';
     b.dataset.paso = p;
     b.innerHTML = `<span class="key mono">${i + 1}</span>${ICONOS[p]}<span class="name"></span>`;
-    b.querySelector('.name')!.textContent = INFO_PASOS[p].herramienta;
+
     b.addEventListener('click', () => alElegir(p));
     return b;
   });
@@ -130,6 +131,9 @@ export function crearBarra(alElegir: (p: Paso) => void): BarraHerramientas {
         b.classList.toggle('done', i < actual);
         b.disabled = !esActual && bloqueo !== null;
         b.title = bloqueo ?? INFO_PASOS[p].nombre;
+        // El nombre se lee cada vez: sigue al idioma actual
+        const nombre = b.querySelector('.name')!;
+        if (nombre.textContent !== INFO_PASOS[p].herramienta) nombre.textContent = INFO_PASOS[p].herramienta;
       });
     },
   };

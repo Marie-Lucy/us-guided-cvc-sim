@@ -1,6 +1,7 @@
 // Lo que el ecógrafo dibuja encima de la imagen: regla de profundidad, foco,
 // marca de orientación, parámetros y (opcional) nombres de las estructuras.
 
+import { t, fmt } from '../i18n';
 import type { Corte } from '../anatomia/anatomia';
 import type { AjustesUS } from './ajustes';
 import { gananciaPorcentaje } from './ajustes';
@@ -63,8 +64,8 @@ function marcadorOrientacion(ctx: CanvasRenderingContext2D, v: Vista): void {
 function parametros(ctx: CanvasRenderingContext2D, v: Vista, a: AjustesUS): void {
   const lineas = [
     `L ${FRECUENCIA_SONDA_MHZ} MHz`,
-    `Gan ${gananciaPorcentaje(a.gananciaDb)}%`,
-    `Prof ${(a.profundidadMm / MM_POR_CM).toFixed(1)} cm`,
+    `${t('us.ganancia')} ${gananciaPorcentaje(a.gananciaDb)}%`,
+    `${t('us.profundidad')} ${fmt(a.profundidadMm / MM_POR_CM, 1)} cm`,
   ];
   ctx.fillStyle = COLOR_TEXTO_EQUIPO;
   ctx.font = FUENTE_EQUIPO;
@@ -125,10 +126,10 @@ function etiqueta(ctx: CanvasRenderingContext2D, v: Vista, texto: string, xMm: n
 }
 
 function etiquetas(ctx: CanvasRenderingContext2D, v: Vista, corte: Corte): void {
-  etiqueta(ctx, v, 'VYI', corte.vena.cx, corte.vena.cy);
-  etiqueta(ctx, v, 'ACC', corte.arteria.cx, corte.arteria.cy);
-  etiqueta(ctx, v, 'ECM', corte.ecm[1].cx, corte.ecm[1].cy);
-  if (corte.tiroides) etiqueta(ctx, v, 'Tiroides', corte.tiroides.cx, corte.tiroides.cy);
+  etiqueta(ctx, v, t('us.vena'), corte.vena.cx, corte.vena.cy);
+  etiqueta(ctx, v, t('us.arteria'), corte.arteria.cx, corte.arteria.cy);
+  etiqueta(ctx, v, t('us.ecm'), corte.ecm[1].cx, corte.ecm[1].cy);
+  if (corte.tiroides) etiqueta(ctx, v, t('us.tiroides'), corte.tiroides.cx, corte.tiroides.cy);
 }
 
 // No borra el canvas: quien llama decide si va sobre la ecografía o sobre el esquema.

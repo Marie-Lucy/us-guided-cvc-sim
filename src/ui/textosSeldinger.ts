@@ -2,6 +2,7 @@
 
 import type { Fase } from '../config/fases';
 import { MM_POR_CM } from '../config/ultrasonido';
+import { t, fmt } from '../i18n';
 import {
   nivelEctopia, motivoParaRetirarAguja, motivoParaRetirarGuia, cateterEnObjetivo, type EstadoSeldinger,
 } from '../procedimiento/seldinger';
@@ -15,41 +16,45 @@ export interface TextosSeldinger {
   lectura: string;
 }
 
-const cm = (mm: number): string => (mm / MM_POR_CM).toFixed(1);
+const cm = (mm: number): string => fmt(mm / MM_POR_CM, 1);
+// Lectura con sus agregados (" · confirmada", …) solo si corresponden
+const unir = (base: string, ...extras: (string | false)[]): string =>
+  [base, ...extras.filter((x): x is string => !!x)].join(' · ');
 
 export function textosSeldinger(fase: Fase, s: EstadoSeldinger): TextosSeldinger | null {
   if (fase === 'guia') {
     const g = s.guia;
-    const estado = g.resistencia ? ' · ¡resistencia!' : nivelEctopia(s) > 0 ? ' · extrasístoles' : '';
+    const estado = g.resistencia ? t('sel.resistencia') : nivelEctopia(s) > 0 && t('sel.extrasistoles');
     return {
-      menos: '◀ Retirar guía',
-      mas: 'Avanzar guía ▶',
-      accion: s.agujaRetirada ? null : 'Retirar la aguja',
+      menos: t('sel.retirarGuia'),
+      mas: t('sel.avanzarGuia'),
+      accion: s.agujaRetirada ? null : t('sel.retirarLaAguja'),
       accionBloqueada: s.agujaRetirada ? null : motivoParaRetirarAguja(s),
       confirmar: s.agujaRetirada && !g.confirmada,
-      lectura: `Guía ${cm(g.insertadaMm)} cm más allá de la aguja${estado}${g.confirmada ? ' · confirmada' : ''}`,
+      lectura: unir(t('sel.lecturaGuia', { cm: cm(g.insertadaMm) }), estado, g.confirmada && t('sel.confirmada')),
     };
   }
   if (fase === 'dilatacion') {
     const d = s.dilatador;
     return {
-      menos: '◀ Retirar dilatador',
-      mas: 'Avanzar dilatador ▶',
+      menos: t('sel.retirarDilatador'),
+      mas: t('sel.avanzarDilatador'),
       accion: null,
       accionBloqueada: null,
       confirmar: false,
-      lectura: `Dilatador ${cm(d.mm)} cm · vaso a ${cm(s.trayectoMm)} cm${d.tractoDilatado ? ' · trayecto dilatado' : ''}`,
+      lectura: unir(t('sel.lecturaDilatador', { cm: cm(d.mm), vaso: cm(s.trayectoMm) }), d.tractoDilatado && t('sel.dilatado')),
     };
   }
   if (fase === 'cateter') {
-    const objetivo = cateterEnObjetivo(s) ? ' · en rango (12–16 cm)' : '';
     return {
-      menos: '◀ Retirar catéter',
-      mas: 'Avanzar catéter ▶',
-      accion: s.guia.retirada ? null : 'Retirar la guía',
+      menos: t('sel.retirarCateter'),
+      mas: t('sel.avanzarCateter'),
+      accion: s.guia.retirada ? null : t('sel.retirarLaGuia'),
       accionBloqueada: s.guia.retirada ? null : motivoParaRetirarGuia(s),
       confirmar: false,
-      lectura: `Catéter a ${cm(s.cateter.mm)} cm de la piel${objetivo}${s.guia.retirada ? ' · guía retirada' : ''}`,
+      lectura: unir(
+        t('sel.lecturaCateter', { cm: cm(s.cateter.mm) }), cateterEnObjetivo(s) && t('sel.enRango'), s.guia.retirada && t('sel.guiaRetirada'),
+      ),
     };
   }
   return null;

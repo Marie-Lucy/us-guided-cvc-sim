@@ -16,12 +16,3 @@ export const TRANSICIONES: Readonly<Record<Fase, readonly Fase[]>> = {
 };
 
 export const FASE_INICIAL: Fase = 'exploracion';
-
-export const NOMBRES_FASE: Readonly<Record<Fase, string>> = {
-  exploracion: 'Exploración',
-  puncion: 'Punción',
-  guia: 'Guía',
-  dilatacion: 'Dilatación',
-  cateter: 'Catéter',
-  evaluacion: 'Evaluación',
-};

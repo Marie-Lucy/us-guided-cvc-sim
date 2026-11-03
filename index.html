@@ -13,7 +13,7 @@
 </head>
 <body>
   <!-- La escena 3D ocupa toda la pantalla; los paneles flotan encima -->
-  <canvas id="canvas-cuello" class="gl-canvas" aria-label="Vista externa del cuello: arrastra la sonda"></canvas>
+  <canvas id="canvas-cuello" class="gl-canvas" aria-label="Vista externa del cuello: arrastra la sonda" data-i18n-aria="hud.cuello"></canvas>
   <div id="etiquetas-cuello" class="labels"></div>
 
   <div class="hud visible">
@@ -21,31 +21,32 @@
     <header class="topbar panel">
       <span class="brand">Eco CVC</span>
       <span id="chip-caso" class="chip-static hide-narrow"></span>
-      <span id="chip-examen" class="chip-static exam-chip" hidden>EXAMEN</span>
+      <span id="chip-examen" class="chip-static exam-chip" hidden data-i18n="hud.examen">EXAMEN</span>
       <span id="chip-demo" class="demo-badge" hidden>DEMO</span>
       <span class="sep hide-narrow"></span>
-      <span class="muted">Fase</span><span id="fase-actual" class="val"></span>
-      <span class="muted hide-narrow">Tiempo</span><span id="tiempo" class="val mono"></span>
+      <span class="muted" data-i18n="hud.fase">Fase</span><span id="fase-actual" class="val"></span>
+      <span class="muted hide-narrow" data-i18n="hud.tiempo">Tiempo</span><span id="tiempo" class="val mono"></span>
       <span class="spacer"></span>
-      <button id="boton-ayuda" class="chip" data-a="help">? Ayuda</button>
-      <button id="boton-reiniciar" class="chip">Reiniciar</button>
-      <button id="boton-terminar" class="chip end" hidden>Terminar</button>
+      <span id="selector-idioma"></span>
+      <button id="boton-ayuda" class="chip" data-a="help" data-i18n="hud.ayuda">? Ayuda</button>
+      <button id="boton-reiniciar" class="chip" data-i18n="hud.reiniciar">Reiniciar</button>
+      <button id="boton-terminar" class="chip end" hidden data-i18n="hud.terminar">Terminar</button>
     </header>
 
     <!-- Columna izquierda: procedimiento y herramienta actual -->
     <div class="col col-left">
-      <section id="checklist" class="panel checklist" aria-label="Procedimiento">
-        <div class="panel-title"><span>Procedimiento</span><span id="progreso-pasos" class="mono"></span></div>
+      <section id="checklist" class="panel checklist" aria-label="Procedimiento" data-i18n-aria="panel.procedimiento">
+        <div class="panel-title"><span data-i18n="panel.procedimiento">Procedimiento</span><span id="progreso-pasos" class="mono"></span></div>
         <div id="pasos"></div>
       </section>
 
-      <section class="panel device" aria-label="Herramienta">
+      <section class="panel device" aria-label="Herramienta" data-i18n-aria="panel.herramienta">
         <div class="panel-title" id="titulo-herramienta">Sonda</div>
 
         <!-- Sonda: siempre disponible -->
         <div class="dev-grupo grupo-sonda">
           <label class="fila-control">
-            <span class="muted">Compresión</span>
+            <span class="muted" data-i18n="ctrl.compresion">Compresión</span>
             <input type="range" id="compresion" min="0" max="100" step="1" value="0">
             <output id="valor-compresion" class="mono"></output>
           </label>
@@ -58,12 +59,12 @@
         <!-- Aguja -->
         <div class="dev-grupo" id="controles-aguja" hidden>
           <label class="fila-control">
-            <span class="muted">Ángulo</span>
+            <span class="muted" data-i18n="ctrl.angulo">Ángulo</span>
             <input type="range" id="angulo-aguja">
             <output id="valor-angulo-aguja" class="mono"></output>
           </label>
           <label class="fila-control">
-            <span class="muted">Dirección</span>
+            <span class="muted" data-i18n="ctrl.direccion">Dirección</span>
             <input type="range" id="orientacion-aguja">
             <output id="valor-orientacion-aguja" class="mono"></output>
           </label>
@@ -82,7 +83,7 @@
           </div>
           <div class="fila-chips">
             <button id="accion-principal" class="btn small"></button>
-            <button id="accion-confirmar" class="btn small">Confirmar guía en la ecografía</button>
+            <button id="accion-confirmar" class="btn small" data-i18n="ctrl.confirmar">Confirmar guía en la ecografía</button>
           </div>
           <span id="lectura-seldinger" class="small muted"></span>
         </div>
@@ -91,27 +92,27 @@
 
     <!-- Columna derecha: ecógrafo, mentor y monitor -->
     <div class="col col-right">
-      <section class="panel ecografo" aria-label="Ecógrafo">
+      <section class="panel ecografo" aria-label="Ecógrafo" data-i18n-aria="panel.ecografo">
         <div class="eco-head">
-          <span class="panel-title">Ecógrafo</span>
+          <span class="panel-title" data-i18n="panel.ecografo">Ecógrafo</span>
           <span class="spacer"></span>
-          <button id="boton-girar" class="chip" title="Tecla R">Girar 90°</button>
+          <button id="boton-girar" class="chip" title="Tecla R" data-i18n-title="eco.girarTitulo" data-i18n="eco.girar">Girar 90°</button>
           <label class="chip chip-check"><input type="checkbox" id="doppler"> Doppler</label>
-          <label class="chip chip-check"><input type="checkbox" id="etiquetas"> Etiquetas</label>
-          <label class="chip chip-check hide-narrow"><input type="checkbox" id="esquema"> Esquema</label>
+          <label class="chip chip-check"><input type="checkbox" id="etiquetas"> <span data-i18n="eco.etiquetas">Etiquetas</span></label>
+          <label class="chip chip-check hide-narrow"><input type="checkbox" id="esquema"> <span data-i18n="eco.esquema">Esquema</span></label>
         </div>
         <div class="lienzo-us">
-          <canvas id="canvas-us" aria-label="Imagen de ultrasonido"></canvas>
+          <canvas id="canvas-us" aria-label="Imagen de ultrasonido" data-i18n-aria="eco.imagen"></canvas>
           <canvas id="canvas-us-overlay" aria-hidden="true"></canvas>
         </div>
         <div class="eco-ajustes">
           <label class="fila-control">
-            <span class="muted">Ganancia</span>
+            <span class="muted" data-i18n="eco.ganancia">Ganancia</span>
             <input type="range" id="ganancia">
             <output id="valor-ganancia" class="mono"></output>
           </label>
           <label class="fila-control">
-            <span class="muted">Profundidad</span>
+            <span class="muted" data-i18n="eco.profundidad">Profundidad</span>
             <input type="range" id="profundidad">
             <output id="valor-profundidad" class="mono"></output>
           </label>
@@ -123,14 +124,14 @@
           <span class="mentor-badge">MENTOR</span>
           <span id="mentor-paso" class="mentor-stage"></span>
           <span id="mentor-pct" class="mentor-pct mono"></span>
-          <button id="mentor-plegar" class="mentor-toggle" aria-label="Plegar el mentor">–</button>
+          <button id="mentor-plegar" class="mentor-toggle" aria-label="Plegar el mentor" data-i18n-aria="mentor.plegar">–</button>
         </div>
         <div class="exam-body">
           <div class="exam-clock">
-            <span class="exam-left-lbl">Tiempo restante</span>
+            <span class="exam-left-lbl" data-i18n="examen.restante">Tiempo restante</span>
             <span id="examen-reloj" class="exam-left mono"></span>
           </div>
-          <p class="exam-rules">Sin Doppler, etiquetas, esquema ni pistas. Cuando se acaba el tiempo, el caso se cierra.</p>
+          <p class="exam-rules" data-i18n="examen.reglas">Sin Doppler, etiquetas, esquema ni pistas. Cuando se acaba el tiempo, el caso se cierra.</p>
           <p id="examen-vineta" class="exam-vignette"></p>
         </div>
         <div class="mentor-bar"><div id="mentor-barra"></div></div>
@@ -139,23 +140,23 @@
           <ul id="mentor-tareas" class="mentor-tasks"></ul>
         </div>
         <p id="mentor-pista" class="mentor-hint" hidden></p>
-        <details class="mentor-why"><summary>¿Por qué este paso?</summary><p id="mentor-porque"></p></details>
+        <details class="mentor-why"><summary data-i18n="mentor.porque">¿Por qué este paso?</summary><p id="mentor-porque"></p></details>
       </section>
 
-      <section class="panel vitals" aria-label="Monitor">
+      <section class="panel vitals" aria-label="Monitor" data-i18n-aria="panel.monitor">
         <div class="v-head">
-          <span class="panel-title">Monitor</span>
+          <span class="panel-title" data-i18n="panel.monitor">Monitor</span>
           <span id="lectura-ecg" class="v-alarm"></span>
         </div>
         <div class="v-row">
-          <div class="v-wave"><span class="v-lbl">II</span><canvas id="canvas-ecg" aria-label="Electrocardiograma"></canvas></div>
-          <div class="v-num hr"><span class="v-lbl">FC</span><span id="valor-fc" class="big mono"></span></div>
+          <div class="v-wave"><span class="v-lbl">II</span><canvas id="canvas-ecg" aria-label="Electrocardiograma" data-i18n-aria="monitor.ecg"></canvas></div>
+          <div class="v-num hr"><span class="v-lbl" data-i18n="monitor.fc">FC</span><span id="valor-fc" class="big mono"></span></div>
         </div>
       </section>
     </div>
 
     <!-- Barra de herramientas: una por paso del procedimiento -->
-    <nav id="barra-herramientas" class="toolbar panel" aria-label="Pasos del procedimiento"></nav>
+    <nav id="barra-herramientas" class="toolbar panel" aria-label="Pasos del procedimiento" data-i18n-aria="panel.pasos"></nav>
 
     <!-- Mensajes breves -->
     <div id="avisos" class="toasts" aria-live="polite"></div>
@@ -167,7 +168,7 @@
   <!-- Evaluación final -->
   <div id="evaluacion" class="debrief" hidden>
     <section class="debrief-card" role="dialog" aria-modal="true" aria-labelledby="titulo-evaluacion">
-      <p class="eyebrow">EVALUACIÓN</p>
+      <p class="eyebrow" data-i18n="eval.titulo">EVALUACIÓN</p>
       <div class="db-top">
         <div class="db-score"><span id="puntaje" class="db-num mono"></span><span class="db-of">/100</span></div>
         <div>
@@ -180,8 +181,8 @@
       <ul id="items-evaluacion" class="db-items"></ul>
       <p id="claves-caso" class="claves-caso"></p>
       <div class="db-actions">
-        <button id="otro-caso" class="btn">Elegir otro paciente</button>
-        <button id="repetir-caso" class="btn-primary">Repetir este caso</button>
+        <button id="otro-caso" class="btn" data-i18n="eval.otro">Elegir otro paciente</button>
+        <button id="repetir-caso" class="btn-primary" data-i18n="eval.repetir">Repetir este caso</button>
       </div>
     </section>
   </div>

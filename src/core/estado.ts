@@ -2,6 +2,7 @@
 // Guarda la fase actual, valida los cambios de fase y avisa a quien escuche.
 
 import { FASE_INICIAL, TRANSICIONES, type Fase } from '../config/fases';
+import { t } from '../i18n';
 
 export interface Estado {
   fase: Fase;
@@ -25,7 +26,7 @@ export function fijarCondicion(desde: Fase, hacia: Fase, condicion: Condicion): 
 
 // Motivo por el que no se puede ir a esa fase ahora, o null si se puede.
 export function motivoBloqueo(fase: Fase): string | null {
-  if (!fasesSiguientes().includes(fase)) return 'Transición no permitida';
+  if (!fasesSiguientes().includes(fase)) return t('motivo.transicion');
   return condiciones.get(clave(estado.fase, fase))?.() ?? null;
 }
 

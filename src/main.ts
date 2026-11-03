@@ -1,7 +1,6 @@
 // Arranque: prepara las dos vistas, los controles y el loop.
 
 import './ui/estilos.css';
-import { NOMBRES_FASE } from './config/fases';
 import { DT_MAXIMO_S, MS_POR_S } from './config/ui';
 import { PASO_TECLADO_MM } from './config/anatomia';
 import {
@@ -66,6 +65,17 @@ import { TIEMPO_LIMITE_EXAMEN_S, AVISO_TIEMPO_EXAMEN_S } from './config/examen';
 import { terminar } from './core/estado';
 import { PASOS, INFO_PASOS, tareas, pista, type Paso } from './ui/guiaPasos';
 import { dibujarPasos, prepararMentor, dibujarMentor, crearBarra, avisar, formatoTiempo } from './ui/hud';
+import {
+  t, tk, fmt, cambiarIdioma, detectarIdioma, leerIdiomaGuardado, infoIdioma, aplicarIdioma, alCambiarIdioma,
+} from './i18n';
+import { crearDesplegableIdioma } from './ui/selectorIdioma';
+import type { EntradaEvaluacion } from './evaluacion/evaluacion';
+
+// Idioma: el elegido antes o, si no, el del navegador (español, portugués o inglés)
+cambiarIdioma(detectarIdioma(leerIdiomaGuardado(), navigator.languages ?? [navigator.language]));
+document.documentElement.lang = infoIdioma().locale;
+aplicarIdioma(document);
+document.getElementById('selector-idioma')?.append(crearDesplegableIdioma());
 
 function elemento<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -247,7 +257,7 @@ function dibujarUltrasonido(tiempo: number): void {
       lateralMm: sonda.lateralMm, respiracion: cicloRespiratorio(tiempo), pulso: pulsoCardiaco(tiempo), tiempo,
     }, elementos, datosLargo));
   }
-  const avisos = [largo ? 'LONG  ◀ cabeza' : 'TRANS'];
+  const avisos = [largo ? `LONG  ◀ ${t('us.cabeza')}` : 'TRANS'];
   if (valsalvaActiva()) avisos.push('VALSALVA');
   // En eje largo las etiquetas transversales no corresponden
   dibujarOverlay(ctx, vista, largo ? { ...ajustes, etiquetas: false } : ajustes, corte, avisos);
@@ -270,7 +280,7 @@ function dibujarEcg(tiempo: number): void {
   const nivel = seldinger ? nivelEctopia(seldinger) : 0;
   const { width, height } = canvasEcg.getBoundingClientRect();
   tiraEcg.dibujar(canvasEcg.getContext('2d')!, width, height, tiempo, nivel);
-  lecturaEcg.textContent = nivel > 0 ? 'Extrasístoles ventriculares' : '';
+  lecturaEcg.textContent = nivel > 0 ? t('monitor.extrasistoles') : '';
   valorFc.textContent = String(FRECUENCIA_CARDIACA_LPM);
   panelMonitor.classList.toggle('ectopia', nivel > 0);
 }
@@ -278,8 +288,8 @@ function dibujarEcg(tiempo: number): void {
 function mostrarLecturas(): void {
   const s = obtenerSonda();
   const lateral = Math.round(s.lateralMm);
-  const lado = lateral === 0 ? '' : lateral > 0 ? ' medial' : ' lateral';
-  lecturaSonda.textContent = `${Math.round(s.posicionMm)} mm sobre la clavícula · ${Math.abs(lateral)} mm${lado}`;
+  const clave = lateral === 0 ? 'sonda.lectura' : lateral > 0 ? 'sonda.lecturaMedial' : 'sonda.lecturaLateral';
+  lecturaSonda.textContent = t(clave, { pos: Math.round(s.posicionMm), lat: Math.abs(lateral) });
   valorCompresion.textContent = `${Math.round(presionSonda(s.compresion))} mmHg`;
   botonValsalva.classList.toggle('activo', valsalvaActiva());
   etiquetaTiempo.textContent = formatoTiempo(obtenerEstado().tiempoTotal);
@@ -289,14 +299,14 @@ let ultimoFlash: 'vena' | 'arteria' | null = null;
 
 function mostrarAguja(): void {
   lecturaAguja.textContent = aguja.entrada
-    ? `Insertada ${Math.round(aguja.insertadaMm)} mm · intento ${Math.max(aguja.intentos, 1)}`
-    : 'Elige el punto de entrada';
+    ? t('aguja.lectura', { mm: Math.round(aguja.insertadaMm), n: Math.max(aguja.intentos, 1) })
+    : t('aguja.elegir');
   // El flash es la única pista directa de dónde está la punta, como en la realidad
   const { cantidad, tipo } = aguja.flash;
   // Aviso una sola vez cuando aparece sangre en la jeringa
   const flash = cantidad > 0 ? tipo : null;
   if (flash && flash !== ultimoFlash && obtenerEstado().fase === 'puncion') {
-    avisar(flash === 'arteria' ? 'Sangre roja y pulsátil en la jeringa' : 'Flash de sangre oscura en la jeringa', flash === 'arteria' ? 'danger' : 'ok');
+    avisar(t(flash === 'arteria' ? 'aviso.flashArteria' : 'aviso.flashVena'), flash === 'arteria' ? 'danger' : 'ok');
   }
   ultimoFlash = flash;
 }
@@ -324,17 +334,17 @@ function dibujar(): void {
 }
 
 function mostrarSeldinger(): void {
-  const t = seldinger ? textosSeldinger(obtenerEstado().fase, seldinger) : null;
-  controlesSeldinger.hidden = !t;
-  if (!t) return;
-  botonMenos.textContent = t.menos;
-  botonMas.textContent = t.mas;
-  accionPrincipal.hidden = !t.accion;
-  accionPrincipal.textContent = t.accion ?? '';
-  accionPrincipal.disabled = !!t.accionBloqueada;
-  accionPrincipal.title = t.accionBloqueada ?? '';
-  accionConfirmar.hidden = !t.confirmar;
-  lecturaSeldinger.textContent = t.lectura;
+  const textos = seldinger ? textosSeldinger(obtenerEstado().fase, seldinger) : null;
+  controlesSeldinger.hidden = !textos;
+  if (!textos) return;
+  botonMenos.textContent = textos.menos;
+  botonMas.textContent = textos.mas;
+  accionPrincipal.hidden = !textos.accion;
+  accionPrincipal.textContent = textos.accion ?? '';
+  accionPrincipal.disabled = !!textos.accionBloqueada;
+  accionPrincipal.title = textos.accionBloqueada ?? '';
+  accionConfirmar.hidden = !textos.confirmar;
+  lecturaSeldinger.textContent = textos.lectura;
 }
 
 function mostrarMensaje(texto: string | null, tipo: 'info' | 'ok' | 'warn' = 'info'): void {
@@ -346,14 +356,11 @@ function mostrarMensaje(texto: string | null, tipo: 'info' | 'ok' | 'warn' = 'in
 let tiemposPasos: Partial<Record<Paso, number>> = {};
 let inicioPaso = 0;
 
-const NOMBRE_HERRAMIENTA: Record<Fase, string> = {
-  exploracion: 'Sonda', puncion: 'Aguja', guia: 'Guía', dilatacion: 'Dilatador', cateter: 'Catéter', evaluacion: 'Sonda',
-};
 
 // Ir a un paso desde la barra: solo los vecinos permitidos por la máquina de estados
 function irAPaso(p: Fase): void {
   if (obtenerEstado().fase === p) return;
-  if (!irA(p)) avisar(motivoBloqueo(p) ?? 'Ese paso no está disponible ahora', 'warn');
+  if (!irA(p)) avisar(motivoBloqueo(p) ?? t('aviso.noDisponible'), 'warn');
 }
 
 const barra = crearBarra(irAPaso);
@@ -362,8 +369,9 @@ function actualizarControles(): void {
   const fase = obtenerEstado().fase;
   document.body.dataset.fase = fase; // el CSS adapta los paneles al paso actual
   requestAnimationFrame(ajustarTodos); // en el celular cambia el alto de los paneles
-  etiquetaFase.textContent = NOMBRES_FASE[fase];
-  tituloHerramienta.textContent = NOMBRE_HERRAMIENTA[fase];
+  etiquetaFase.textContent = tk(`fase.${fase}`);
+  // En la evaluación queda la sonda en la mano
+  tituloHerramienta.textContent = INFO_PASOS[fase === 'evaluacion' ? 'exploracion' : fase].herramienta;
 }
 
 function mostrarHud(): void {
@@ -380,11 +388,11 @@ function mostrarHud(): void {
   if (examen) mostrarRelojExamen(paso);
   else if (demo) dibujarMentor(paso, lista, { tipo: 'ok', texto: demo.narracion });
   else dibujarMentor(paso, lista, pista(paso, estado, motivo));
-  barra.actualizar(fase, (p) => (fasesSiguientes().includes(p) ? motivoBloqueo(p) : 'Sigue el orden del procedimiento'));
+  barra.actualizar(fase, (p) => (fasesSiguientes().includes(p) ? motivoBloqueo(p) : t('motivo.orden')));
   botonTerminar.hidden = fase !== 'cateter';
   const motivoFin = fase === 'cateter' ? motivoBloqueo('evaluacion') : null;
   botonTerminar.disabled = motivoFin !== null;
-  botonTerminar.title = motivoFin ?? 'Terminar y ver la evaluación';
+  botonTerminar.title = motivoFin ?? t('hud.terminarTitulo');
 }
 
 const tiempoRestante = (): number => Math.max(TIEMPO_LIMITE_EXAMEN_S - obtenerEstado().tiempoTotal, 0);
@@ -397,14 +405,21 @@ function mostrarRelojExamen(paso: Paso): void {
   elemento('mentor-paso').textContent = `${PASOS.indexOf(paso) + 1}/${PASOS.length} · ${INFO_PASOS[paso].nombre}`;
 }
 
+// Textos que dependen del modo y del paciente (también al cambiar de idioma)
+function textosModo(): void {
+  elemento('examen-vineta').textContent = esSorpresa ? t('examen.sorpresa') : casoActual.descripcion;
+  chipCaso.textContent = esSorpresa ? t('inicio.sorpresa') : casoActual.nombre;
+  chipCaso.title = esSorpresa ? '' : casoActual.descripcion;
+  mostrarModoDemo(demo !== null);
+}
+
 // Modo examen: sin Doppler, etiquetas, esquema ni pistas, y con tiempo límite
 function aplicarModo(): void {
   const examen = modo === 'examen';
   document.body.dataset.modo = modo;
   elemento('mentor').classList.toggle('exam', examen);
   elemento('chip-examen').hidden = !examen;
-  elemento('examen-vineta').textContent = esSorpresa ? 'Paciente sin datos previos: explora antes de decidir.' : casoActual.descripcion;
-  document.querySelector('#mentor .mentor-badge')!.textContent = examen ? 'EXAMEN' : 'MENTOR';
+  textosModo();
   for (const [casilla, apagar] of [[casillaDoppler, cambiarDoppler], [casillaEtiquetas, cambiarEtiquetas], [casillaEsquema, cambiarEsquema]] as const) {
     if (examen) {
       casilla.checked = false;
@@ -417,10 +432,10 @@ function aplicarModo(): void {
 // Requisitos clínicos de cada paso
 function prepararCondiciones(): void {
   fijarCondicion('puncion', 'guia', () => motivoParaGuia(aguja));
-  fijarCondicion('guia', 'dilatacion', () => (seldinger ? motivoParaDilatar(seldinger) : 'No hay guía'));
+  fijarCondicion('guia', 'dilatacion', () => (seldinger ? motivoParaDilatar(seldinger) : t('motivo.sinGuia')));
   fijarCondicion('guia', 'puncion', () => (seldinger ? motivoParaVolverAPuncion(seldinger) : null));
-  fijarCondicion('dilatacion', 'cateter', () => (seldinger ? motivoParaCateter(seldinger) : 'No hay guía'));
-  fijarCondicion('cateter', 'evaluacion', () => (seldinger ? motivoParaTerminar(seldinger) : 'No hay catéter'));
+  fijarCondicion('dilatacion', 'cateter', () => (seldinger ? motivoParaCateter(seldinger) : t('motivo.sinGuia')));
+  fijarCondicion('cateter', 'evaluacion', () => (seldinger ? motivoParaTerminar(seldinger) : t('motivo.sinCateter')));
 }
 
 // ---- Controles de la sonda ----
@@ -474,6 +489,7 @@ function prepararDeslizador(
     salida.textContent = texto();
   };
   slider.addEventListener('input', alCambiar);
+  alCambiarIdioma(() => (salida.textContent = texto()));
   alCambiar();
 }
 
@@ -490,7 +506,7 @@ function prepararControlesUS(): void {
   );
   prepararDeslizador(
     sliderProfundidad, valorProfundidad, PROFUNDIDAD_MIN_MM, PROFUNDIDAD_MAX_MM, PROFUNDIDAD_PASO_MM, a.profundidadMm,
-    cambiarProfundidad, () => `${(obtenerAjustes().profundidadMm / MM_POR_CM).toFixed(1)} cm`,
+    cambiarProfundidad, () => `${fmt(obtenerAjustes().profundidadMm / MM_POR_CM, 1)} cm`,
   );
   prepararCasilla(casillaDoppler, a.doppler, cambiarDoppler);
   prepararCasilla(casillaEtiquetas, a.etiquetas, cambiarEtiquetas);
@@ -509,7 +525,7 @@ function prepararControlesAguja(): void {
     (v) => cambiarOrientacion(aguja, v),
     () => {
       const o = aguja.orientacionGrados;
-      return o === 0 ? 'recta' : `${Math.abs(o)}° ${o > 0 ? 'medial' : 'lateral'}`;
+      return o === 0 ? t('ctrl.recta') : t(o > 0 ? 'ctrl.medial' : 'ctrl.lateral', { g: Math.abs(o) });
     },
   );
   // Botones que actúan mientras se mantienen apretados (aguja o herramienta de Seldinger)
@@ -543,19 +559,19 @@ function prepararControlesSeldinger(): void {
     if (!seldinger) return;
     const fase = obtenerEstado().fase;
     if (fase === 'guia' && retirarAguja(seldinger)) {
-      mostrarMensaje('Aguja retirada. Confirma con la ecografía que la guía está en la vena (mejor en eje largo: R).');
+      mostrarMensaje(t('aviso.agujaRetirada'));
     }
-    if (fase === 'cateter' && retirarGuia(seldinger)) mostrarMensaje('Guía retirada. Fija el catéter y termina.');
+    if (fase === 'cateter' && retirarGuia(seldinger)) mostrarMensaje(t('aviso.guiaRetirada'));
   });
   accionConfirmar.addEventListener('click', () => {
     if (!seldinger) return;
-    mostrarMensaje(confirmarGuiaAhora() ?? 'Guía confirmada en la imagen.');
+    mostrarMensaje(confirmarGuiaAhora() ?? t('aviso.guiaConfirmada'));
   });
 }
 
 // Confirma la guía si se ve en la imagen actual. Devuelve el motivo si no se pudo.
 function confirmarGuiaAhora(): string | null {
-  if (!seldinger) return 'No hay guía';
+  if (!seldinger) return t('motivo.sinGuia');
   const visible = dispositivoVisible(dispositivoActual(), planoActual(), corteEnSonda(obtenerSonda().posicionMm, obtenerEstado().tiempoTotal));
   const motivo = confirmarGuia(seldinger, visible);
   if (!motivo && obtenerSonda().orientacion === 'longitudinal') registro.confirmoEnEjeLargo = true;
@@ -593,7 +609,7 @@ function alCambiarDeFase(nueva: Fase = obtenerEstado().fase, anterior: Fase = nu
   // Volver a la aguja: se saca la guía
   if (fase === 'puncion') seldinger = null;
   if (fase === 'evaluacion') {
-    const resultado = evaluar({
+    const entrada: EntradaEvaluacion = {
       registro,
       intentos: intentosTotales(registro, aguja),
       eventosAguja: eventosAguja(registro, aguja),
@@ -601,18 +617,21 @@ function alCambiarDeFase(nueva: Fase = obtenerEstado().fase, anterior: Fase = nu
       tiempoS: obtenerEstado().tiempoTotal,
       tiempoAgotado,
       pasosCompletados: PASOS.indexOf(anterior as Paso),
-    });
+    };
+    const resultado = evaluar(entrada);
     const mejorAntes = mejorPuntaje(leerHistorial(almacen), casoActual.id);
+    ultimaEvaluacion = { entrada, mejorAntes };
     // Lo que hizo (o empezó) la demostración no cuenta como intento propio
     if (!fueDemo) {
       guardarIntento(almacen, {
         caso: casoActual.id, modo, puntaje: resultado.puntaje, exito: resultado.exito,
-        calificacion: resultado.calificacion, fecha: Date.now(),
+        calificacion: resultado.calificacion, nota: resultado.nota, fecha: Date.now(),
       });
     }
     mostrarEvaluacion(resultado, casoActual, esSorpresa, fueDemo);
     mostrarMejorMarca(resultado.puntaje, mejorAntes);
   } else {
+    ultimaEvaluacion = null;
     ocultarEvaluacion();
   }
   // Volver a explorar = retirar todo y empezar de nuevo
@@ -640,6 +659,22 @@ function reiniciarTodo(): void {
   sliderCompresion.value = '0';
 }
 
+// ---- Idioma ----
+// La evaluación abierta se vuelve a calcular (es pura) para mostrarla en el idioma nuevo
+let ultimaEvaluacion: { entrada: EntradaEvaluacion; mejorAntes: number | null } | null = null;
+
+function traducirTodo(): void {
+  document.documentElement.lang = infoIdioma().locale;
+  aplicarIdioma(document);
+  actualizarControles();
+  textosModo();
+  if (ultimaEvaluacion && obtenerEstado().fase === 'evaluacion') {
+    const resultado = evaluar(ultimaEvaluacion.entrada);
+    mostrarEvaluacion(resultado, casoActual, esSorpresa, fueDemo);
+    mostrarMejorMarca(resultado.puntaje, ultimaEvaluacion.mejorAntes);
+  }
+}
+
 // ---- Selector de paciente ----
 // En el examen, la línea de "mejor marca" bajo el título de la evaluación
 function mostrarMejorMarca(puntaje: number, mejorAntes: number | null): void {
@@ -647,7 +682,7 @@ function mostrarMejorMarca(puntaje: number, mejorAntes: number | null): void {
   linea.hidden = modo !== 'examen';
   const nueva = mejorAntes === null || puntaje > mejorAntes;
   linea.classList.toggle('new', nueva);
-  linea.textContent = nueva ? `¡Nueva mejor marca en examen: ${puntaje}!` : `Tu mejor marca en examen: ${mejorAntes}`;
+  linea.textContent = nueva ? t('eval.nuevaMarca', { n: puntaje }) : t('eval.mejorMarca', { n: mejorAntes ?? 0 });
 }
 
 function elegirCaso(eleccion: EleccionCaso, nuevoModo: Modo = modo): void {
@@ -657,8 +692,6 @@ function elegirCaso(eleccion: EleccionCaso, nuevoModo: Modo = modo): void {
   casoActual = caso(eleccion === SORPRESA ? elegirSorpresa() : eleccion);
   modo = nuevoModo;
   aplicarModo();
-  chipCaso.textContent = esSorpresa ? 'Paciente sorpresa' : casoActual.nombre;
-  chipCaso.title = esSorpresa ? '' : casoActual.descripcion;
   reiniciarTodo();
 }
 
@@ -717,7 +750,7 @@ function mostrarModoDemo(activa: boolean): void {
   elemento('chip-demo').hidden = !activa;
   const insignia = document.querySelector('#mentor .mentor-badge')!;
   insignia.classList.toggle('demo', activa);
-  insignia.textContent = activa ? 'DEMO' : modo === 'examen' ? 'EXAMEN' : 'MENTOR';
+  insignia.textContent = t(activa ? 'demo.badge' : modo === 'examen' ? 'hud.examen' : 'mentor.badge');
 }
 
 function empezarDemo(): void {
@@ -725,7 +758,7 @@ function empezarDemo(): void {
   fueDemo = true;
   demo = new Demo(hostDemo);
   mostrarModoDemo(true);
-  avisar('Demostración en curso. Haz clic o presiona una tecla para tomar el control.');
+  avisar(t('demo.enCurso'));
 }
 
 function detenerDemo(mensaje?: string): void {
@@ -737,7 +770,7 @@ function detenerDemo(mensaje?: string): void {
 
 // Al terminar el guion: se cierra el caso y se muestra la evaluación
 function terminarDemo(): void {
-  detenerDemo('Demostración terminada. Así se ve un procedimiento sin complicaciones.');
+  detenerDemo(t('demo.terminada'));
   irA('evaluacion');
 }
 
@@ -745,11 +778,11 @@ function terminarDemo(): void {
 function prepararTomaDeControl(): void {
   const enVentana = (e: Event): boolean => (e.target as HTMLElement).closest?.('#inicio, #evaluacion') !== null;
   document.addEventListener('pointerdown', (e) => {
-    if (demo && !enVentana(e)) detenerDemo('Tienes el control. El caso continúa desde aquí.');
+    if (demo && !enVentana(e)) detenerDemo(t('demo.control'));
   }, { capture: true });
   window.addEventListener('keydown', (e) => {
     if (!demo || enVentana(e)) return;
-    detenerDemo('Tienes el control. El caso continúa desde aquí.');
+    detenerDemo(t('demo.control'));
     e.stopImmediatePropagation(); // esa tecla solo sirve para tomar el control
   }, { capture: true });
 }
@@ -811,6 +844,7 @@ prepararMentor();
 elemento('boton-ayuda').addEventListener('click', () => inicio.abrir(esSorpresa ? SORPRESA : casoActual.id, modo));
 botonTerminar.addEventListener('click', () => irAPaso('evaluacion'));
 alCambiarDeFase();
+alCambiarIdioma(traducirTodo);
 requestAnimationFrame(cuadro);
 
 // Solo en desarrollo: acceso desde la consola o los tests de navegador.

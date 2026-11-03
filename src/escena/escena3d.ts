@@ -1,6 +1,7 @@
 // Vista externa: el paciente cubierto con el campo estéril, la ventana sobre
 // el cuello derecho y la sonda, que se arrastra sobre la piel.
 
+import { tk } from '../i18n';
 import {
   WebGLRenderer, Scene, PerspectiveCamera, Color, HemisphereLight, DirectionalLight, Mesh, Group,
   BufferGeometry, Float32BufferAttribute, MeshPhysicalMaterial, MeshStandardMaterial, PlaneGeometry,
@@ -229,16 +230,18 @@ function crearEtiquetas(contenedor: HTMLElement): Etiqueta[] {
   const z = 0;
   const separacion = 30; // mm a cada lado del centro
   const definiciones: [string, Vector3][] = [
-    ['Clavícula', enPiel(anguloCentro(z) + 0.15, E.Z_CLAVICULA_MEDIAL_MM - 22)],
-    ['ECM esternal', enPiel(anguloCentro(z) - separacion / R, z + 4)],
-    ['ECM clavicular', enPiel(anguloCentro(z) + separacion / R, z + 4)],
-    ['Triángulo', enPiel(anguloCentro(z), z - 4)],
-    ['Cabeza', new Vector3(-20, 112, 175)],
+    ['cuello.clavicula', enPiel(anguloCentro(z) + 0.15, E.Z_CLAVICULA_MEDIAL_MM - 22)],
+    ['cuello.ecmEsternal', enPiel(anguloCentro(z) - separacion / R, z + 4)],
+    ['cuello.ecmClavicular', enPiel(anguloCentro(z) + separacion / R, z + 4)],
+    ['cuello.triangulo', enPiel(anguloCentro(z), z - 4)],
+    ['cuello.cabeza', new Vector3(-20, 112, 175)],
   ];
-  return definiciones.map(([texto, punto]) => {
+  // El texto lo pone aplicarIdioma (y lo cambia si cambia el idioma)
+  return definiciones.map(([clave, punto]) => {
     const el = document.createElement('span');
     el.className = 'etiqueta-3d';
-    el.textContent = texto;
+    el.dataset.i18n = clave;
+    el.textContent = tk(clave);
     contenedor.appendChild(el);
     return { el, punto };
   });

@@ -2,16 +2,31 @@
 // del simulador no sabe de casos, solo recibe la anatomía.
 
 import { ANATOMIA_NORMAL, type Anatomia, type NivelAnatomico } from '../config/anatomia';
+import { tk } from '../i18n';
 
 export type IdCaso = 'normal' | 'obeso' | 'hipovolemico' | 'variante' | 'trombosis';
 
+export type Nivel = 'basico' | 'intermedio' | 'avanzado';
+
+// Los textos se leen del diccionario en el idioma actual (caso.<id>.nombre, …)
 export interface Caso {
-  id: IdCaso;
-  nombre: string;
-  dificultad: 'Básico' | 'Intermedio' | 'Avanzado';
-  descripcion: string; // lo que el usuario ve al elegirlo
-  claves: string; // qué tener en cuenta (se muestra en la evaluación)
-  anatomia: Anatomia;
+  readonly id: IdCaso;
+  readonly nivel: Nivel; // para el color de la tarjeta
+  readonly nombre: string;
+  readonly dificultad: string; // el nivel en palabras
+  readonly descripcion: string; // lo que el usuario ve al elegirlo
+  readonly claves: string; // qué tener en cuenta (se muestra en la evaluación)
+  readonly anatomia: Anatomia;
+}
+
+function definirCaso(id: IdCaso, nivel: Nivel, anatomia: Anatomia): Caso {
+  return {
+    id, nivel, anatomia,
+    get nombre() { return tk(`caso.${id}.nombre`); },
+    get dificultad() { return tk(`nivel.${nivel}`); },
+    get descripcion() { return tk(`caso.${id}.descripcion`); },
+    get claves() { return tk(`caso.${id}.claves`); },
+  };
 }
 
 // Desplaza un nivel hacia lo profundo (todo lo que está bajo la grasa)
@@ -72,47 +87,11 @@ const TROMBOSIS: Anatomia = {
 };
 
 export const CASOS: readonly Caso[] = [
-  {
-    id: 'normal',
-    nombre: 'Anatomía normal',
-    dificultad: 'Básico',
-    descripcion: 'Yugular lateral y superficial a la carótida, bien llena.',
-    claves: 'Identifica cada vaso (compresión, pulso, Doppler) y sigue la punta en todo momento.',
-    anatomia: ANATOMIA_NORMAL,
-  },
-  {
-    id: 'obeso',
-    nombre: 'Paciente obeso',
-    dificultad: 'Intermedio',
-    descripcion: 'Mucha grasa subcutánea: los vasos quedan casi 1 cm más profundos.',
-    claves: 'Aumenta la profundidad de la imagen, entra con más ángulo y no confundas el largo de aguja con la profundidad.',
-    anatomia: OBESO,
-  },
-  {
-    id: 'hipovolemico',
-    nombre: 'Paciente hipovolémico',
-    dificultad: 'Intermedio',
-    descripcion: 'Yugular chica y aplanada, colapsa con la respiración y con muy poca presión.',
-    claves: 'Comprime lo mínimo, usa Valsalva para llenarla y espera más tienda antes del flash.',
-    anatomia: HIPOVOLEMICO,
-  },
-  {
-    id: 'variante',
-    nombre: 'Variante anatómica',
-    dificultad: 'Avanzado',
-    descripcion: 'La yugular está justo encima de la carótida.',
-    claves: 'Atravesar la pared posterior es entrar a la carótida: avanza de a milímetros y busca un abordaje más lateral.',
-    anatomia: VARIANTE,
-  },
-  {
-    id: 'trombosis',
-    nombre: 'Yugular trombosada',
-    dificultad: 'Avanzado',
-    descripcion: 'Un trombo ocupa el tramo bajo y medio de la yugular.',
-    claves: 'Recorre la vena entera comprimiendo en cada nivel: donde no colapsa, se ve gris por dentro y no hay flujo, '
-      + 'hay trombo. No punciones ahí; busca el tramo libre, más arriba (a más de 4 cm de la clavícula).',
-    anatomia: TROMBOSIS,
-  },
+  definirCaso('normal', 'basico', ANATOMIA_NORMAL),
+  definirCaso('obeso', 'intermedio', OBESO),
+  definirCaso('hipovolemico', 'intermedio', HIPOVOLEMICO),
+  definirCaso('variante', 'avanzado', VARIANTE),
+  definirCaso('trombosis', 'avanzado', TROMBOSIS),
 ];
 
 export const CASO_INICIAL: IdCaso = 'normal';

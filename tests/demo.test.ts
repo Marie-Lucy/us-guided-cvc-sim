@@ -1,3 +1,4 @@
+import { t } from '../src/i18n';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Demo, PASOS_DEMO, type DemoHost } from '../src/procedimiento/demo';
 import { obtenerEstado, irA, reiniciar, actualizar, fijarCondicion } from '../src/core/estado';
@@ -130,6 +131,6 @@ describe('demostración', () => {
   });
 
   it('cada paso tiene su narración', () => {
-    for (const p of PASOS_DEMO) expect(p.dice.length).toBeGreaterThan(15);
+    for (const p of PASOS_DEMO) expect(t(p.dice).length).toBeGreaterThan(15);
   });
 });

@@ -3,6 +3,8 @@
 // Lógica pura: no dibuja ni toca el DOM.
 
 import * as P from '../config/procedimiento';
+import { MM_POR_CM } from '../config/ultrasonido';
+import { t } from '../i18n';
 import { limitar } from '../core/matematica';
 import type { EstadoAguja, Vaso } from '../aguja/aguja';
 import { punta } from '../aguja/aguja';
@@ -72,9 +74,9 @@ export function nivelEctopia(s: EstadoSeldinger): 0 | 1 | 2 {
 }
 
 export function motivoParaRetirarAguja(s: EstadoSeldinger): string | null {
-  if (s.agujaRetirada) return 'La aguja ya está afuera';
+  if (s.agujaRetirada) return t('motivo.agujaAfuera');
   if (s.guia.insertadaMm < P.GUIA_MIN_PARA_RETIRAR_AGUJA_MM) {
-    return `Avanza al menos ${P.GUIA_MIN_PARA_RETIRAR_AGUJA_MM / 10} cm de guía antes de retirar la aguja`;
+    return t('motivo.guiaMinima', { cm: P.GUIA_MIN_PARA_RETIRAR_AGUJA_MM / MM_POR_CM });
   }
   return null;
 }
@@ -87,7 +89,7 @@ export function retirarAguja(s: EstadoSeldinger): boolean {
 
 // El usuario confirma que ve la guía. Solo vale si la guía está en la imagen.
 export function confirmarGuia(s: EstadoSeldinger, guiaVisible: boolean): string | null {
-  if (!guiaVisible) return 'La guía no se ve en la imagen: búscala con la sonda (mejor en eje largo)';
+  if (!guiaVisible) return t('motivo.guiaNoVisible');
   s.guia.confirmada = true;
   return null;
 }
@@ -117,9 +119,9 @@ export function moverCateter(s: EstadoSeldinger, dMm: number): void {
 }
 
 export function motivoParaRetirarGuia(s: EstadoSeldinger): string | null {
-  if (s.guia.retirada) return 'La guía ya está afuera';
+  if (s.guia.retirada) return t('motivo.guiaAfuera');
   if (s.cateter.mm < P.CATETER_MIN_PARA_RETIRAR_GUIA_MM) {
-    return `Avanza el catéter al menos ${P.CATETER_MIN_PARA_RETIRAR_GUIA_MM / 10} cm antes de retirar la guía`;
+    return t('motivo.cateterMinimo', { cm: P.CATETER_MIN_PARA_RETIRAR_GUIA_MM / MM_POR_CM });
   }
   return null;
 }
@@ -138,32 +140,32 @@ export const cateterEnObjetivo = (s: EstadoSeldinger): boolean =>
 // ---------------------------------------------------------------------
 
 export function motivoParaGuia(aguja: EstadoAguja): string | null {
-  if (aguja.flash.cantidad === 0) return 'Aspira: sin sangre en la jeringa no se pasa la guía';
-  if (aguja.lugar !== 'vena' && aguja.lugar !== 'arteria') return 'Perdiste el flash: la punta ya no está en un vaso';
+  if (aguja.flash.cantidad === 0) return t('motivo.aspira');
+  if (aguja.lugar !== 'vena' && aguja.lugar !== 'arteria') return t('motivo.perdioFlash');
   return null;
 }
 
 export function motivoParaDilatar(s: EstadoSeldinger): string | null {
-  if (s.vaso === null) return 'La guía no entró a un vaso';
-  if (!s.agujaRetirada) return 'Primero retira la aguja dejando la guía';
-  if (!s.guia.confirmada) return 'Confirma la guía dentro del vaso con la ecografía';
-  if (nivelEctopia(s) > 0) return 'Hay extrasístoles: retira la guía hasta que cedan';
+  if (s.vaso === null) return t('motivo.guiaSinVaso');
+  if (!s.agujaRetirada) return t('motivo.retirarAgujaPrimero');
+  if (!s.guia.confirmada) return t('motivo.confirmarGuia');
+  if (nivelEctopia(s) > 0) return t('motivo.extrasistoles');
   return null;
 }
 
 export function motivoParaVolverAPuncion(s: EstadoSeldinger): string | null {
-  return s.agujaRetirada ? 'La aguja ya se retiró' : null;
+  return s.agujaRetirada ? t('motivo.agujaYaRetirada') : null;
 }
 
 export function motivoParaCateter(s: EstadoSeldinger): string | null {
-  if (!s.dilatador.tractoDilatado) return 'Dilata el trayecto hasta el vaso';
-  if (s.dilatador.mm > 0) return 'Retira el dilatador dejando la guía';
+  if (!s.dilatador.tractoDilatado) return t('motivo.dilatar');
+  if (s.dilatador.mm > 0) return t('motivo.retirarDilatador');
   return null;
 }
 
 export function motivoParaTerminar(s: EstadoSeldinger): string | null {
-  if (s.cateter.mm <= s.trayectoMm) return 'El catéter todavía no llega al vaso';
-  if (!s.guia.retirada) return 'Retira la guía';
+  if (s.cateter.mm <= s.trayectoMm) return t('motivo.cateterNoLlega');
+  if (!s.guia.retirada) return t('motivo.retirarGuia');
   return null;
 }
 

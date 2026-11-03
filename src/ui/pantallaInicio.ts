@@ -4,6 +4,9 @@
 import { CASOS, SORPRESA, type IdCaso, type EleccionCaso } from '../casos/casos';
 import { mejorPuntaje, type Intento, type Modo } from '../evaluacion/historial';
 import { TIEMPO_LIMITE_EXAMEN_S, HISTORIAL_VISIBLE } from '../config/examen';
+import { t, tk, aplicarIdioma, alCambiarIdioma, infoIdioma } from '../i18n';
+import { textoNota } from '../evaluacion/evaluacion';
+import { crearBotonesIdioma } from './selectorIdioma';
 
 const S_POR_MIN = 60;
 const UMBRAL_BIEN = 70;
@@ -36,24 +39,18 @@ const ARTE = `
   <path d="M84 156 h20 M86 162 h16 M88 168 h12" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
 </svg>`;
 
-const PASOS = [
-  'Identificar la yugular y la carótida, y comprimir',
-  'Puncionar siguiendo la punta hasta el flash',
-  'Pasar la guía y confirmarla en la vena',
-  'Dilatar el trayecto',
-  'Colocar el catéter a 12–16 cm',
-];
+const PASOS = ['inicio.paso1', 'inicio.paso2', 'inicio.paso3', 'inicio.paso4', 'inicio.paso5'];
 
+// [acción, tecla]: claves del diccionario o, si no empiezan con «control.», el texto tal cual
 const CONTROLES: readonly [string, string][] = [
-  ['Pasos', '1–5'],
-  ['Mover la sonda', 'Arrastrar · flechas'],
-  ['Comprimir', 'Espacio'],
-  ['Girar la sonda', 'R'],
-  ['Avanzar / retirar', 'W / S'],
-  ['En el celular', 'Botones y deslizadores'],
+  ['control.pasos', '1–5'],
+  ['control.mover', 'control.mover.tecla'],
+  ['control.comprimir', 'control.comprimir.tecla'],
+  ['control.girar', 'R'],
+  ['control.avanzar', 'W / S'],
+  ['control.celular', 'control.celular.tecla'],
 ];
-
-const CLASE_DIFICULTAD: Record<string, string> = { Básico: 'basico', Intermedio: 'intermedio', Avanzado: 'avanzado' };
+const celda = (texto: string): string => (texto.startsWith('control.') ? `<span data-i18n="${texto}"></span>` : `<span>${texto}</span>`);
 
 function leerNoMostrar(): boolean {
   try {
@@ -74,12 +71,11 @@ function guardarNoMostrar(valor: boolean): void {
 
 export interface PantallaInicio { abrir: (casoActual: EleccionCaso, modo: Modo) => void }
 
-const DESCRIPCION_SORPRESA = `Uno de los ${CASOS.length} pacientes, al azar. No sabrás cuál hasta la evaluación: explora antes de decidir.`;
+const descripcionSorpresa = (): string => t('inicio.sorpresaDesc', { n: CASOS.length });
 
-const NOTA_MODO: Record<Modo, string> = {
-  practica: 'Con mentor, pistas, Doppler, etiquetas y esquema. Sin límite de tiempo.',
-  examen: `Sin ayudas y con ${TIEMPO_LIMITE_EXAMEN_S / S_POR_MIN} minutos. Tu mejor puntaje queda guardado en este navegador.`,
-};
+const notaModo = (m: Modo): string => (m === 'practica'
+  ? t('inicio.notaPractica')
+  : t('inicio.notaExamen', { min: TIEMPO_LIMITE_EXAMEN_S / S_POR_MIN }));
 
 const claseIntento = (i: Intento): string => (!i.exito ? 'bad' : i.puntaje >= UMBRAL_BIEN ? 'good' : 'warn');
 
@@ -96,30 +92,34 @@ export function prepararInicio(
           <span class="ss-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><ellipse cx="10" cy="13" rx="6" ry="4"/><circle cx="18.5" cy="15.5" r="2.5"/></svg></span>
           <span class="ss-logo-text">Eco CVC</span>
         </div>
-        <span class="ss-nav-tag">Simulador educativo · Yugular interna derecha</span>
+        <div class="ss-lang-row">
+          <span class="ss-nav-tag" data-i18n="inicio.navTag"></span>
+          <span class="ss-lang-lbl" data-i18n="idioma.etiqueta"></span>
+          <span class="ss-lang"></span>
+        </div>
       </header>
 
       <section class="ss-hero">
         <div class="ss-col ss-copy">
-          <span class="ss-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linejoin="round"/></svg>Ecografía en tiempo real</span>
+          <span class="ss-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linejoin="round"/></svg><span data-i18n="inicio.tag"></span></span>
           <h1 class="ss-title" id="titulo-inicio">Eco CVC</h1>
-          <p class="ss-lead">Canaliza la yugular interna derecha con ecografía y técnica de Seldinger, sin puncionar la carótida, la pared posterior ni la pleura.</p>
-          <p class="ss-chosen"><b class="ss-chosen-title"></b> <button class="ss-change" type="button">Cambiar ↓</button></p>
+          <p class="ss-lead" data-i18n="inicio.lead"></p>
+          <p class="ss-chosen"><b class="ss-chosen-title"></b> <button class="ss-change" type="button" data-i18n="inicio.cambiar"></button></p>
           <p class="ss-case"></p>
           <div class="ss-mode">
-            <span class="ss-mode-lbl">Modo</span>
-            <div class="ss-mode-toggle" role="radiogroup" aria-label="Modo">
-              <button type="button" role="radio" data-modo="practica">Práctica</button>
-              <button type="button" role="radio" data-modo="examen">Examen</button>
+            <span class="ss-mode-lbl" data-i18n="inicio.modo"></span>
+            <div class="ss-mode-toggle" role="radiogroup" data-i18n-aria="inicio.modo">
+              <button type="button" role="radio" data-modo="practica" data-i18n="modo.practica"></button>
+              <button type="button" role="radio" data-modo="examen" data-i18n="modo.examen"></button>
             </div>
           </div>
           <p class="ss-mode-note"></p>
           <div class="ss-cta">
-            <button class="ss-pill ss-pill-dark ss-entrar">Entrar al simulador<span class="ss-arrow">${FLECHA}</span></button>
-            <button class="ss-pill ss-pill-light ss-demo">Ver una demostración primero<span class="ss-arrow green">${FLECHA}</span></button>
+            <button class="ss-pill ss-pill-dark ss-entrar"><span data-i18n="inicio.entrar"></span><span class="ss-arrow">${FLECHA}</span></button>
+            <button class="ss-pill ss-pill-light ss-demo"><span data-i18n="inicio.demo"></span><span class="ss-arrow green">${FLECHA}</span></button>
           </div>
-          <p class="ss-ack">Al entrar aceptas que es solo para educación.</p>
-          <label class="ss-no-mostrar"><input type="checkbox" class="ss-check-no-mostrar"> No mostrar al abrir</label>
+          <p class="ss-ack" data-i18n="inicio.ack"></p>
+          <label class="ss-no-mostrar"><input type="checkbox" class="ss-check-no-mostrar"> <span data-i18n="inicio.noMostrar"></span></label>
         </div>
 
         <div class="ss-col ss-center">
@@ -128,34 +128,34 @@ export function prepararInicio(
             <div class="ss-arch-art">${ARTE}</div>
             <div class="ss-float ss-float-top">
               <span class="ss-float-num">${CASOS.length}</span>
-              <span class="ss-float-lbl">PACIENTES</span>
+              <span class="ss-float-lbl" data-i18n="inicio.pacientes"></span>
             </div>
             <div class="ss-float ss-float-bottom">
               <span class="ss-float-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
-              <span><b>5 pasos</b><small>Técnica de Seldinger</small></span>
+              <span><b data-i18n="inicio.pasos"></b><small data-i18n="inicio.pasosSub"></small></span>
             </div>
           </div>
         </div>
 
         <div class="ss-col ss-right">
           <div class="ss-glass">
-            <span class="ss-badge"><span class="ss-warn-dot"></span>Solo educación</span>
-            <p class="ss-disclaimer">No es un dispositivo médico ni entrenamiento clínico certificado. La anatomía, la fisiología y los dispositivos están simplificados con fines didácticos.</p>
-            <p class="ss-glass-title">Vas a</p>
-            <ul class="ss-list">${PASOS.map((p) => `<li>${p}</li>`).join('')}</ul>
-            <p class="ss-glass-title">Controles</p>
-            <ul class="ss-facts small">${CONTROLES.map(([k, v]) => `<li><span>${k}</span><span>${v}</span></li>`).join('')}</ul>
+            <span class="ss-badge"><span class="ss-warn-dot"></span><span data-i18n="inicio.badge"></span></span>
+            <p class="ss-disclaimer" data-i18n="inicio.aviso"></p>
+            <p class="ss-glass-title" data-i18n="inicio.vasA"></p>
+            <ul class="ss-list">${PASOS.map((p) => `<li data-i18n="${p}"></li>`).join('')}</ul>
+            <p class="ss-glass-title" data-i18n="inicio.controles"></p>
+            <ul class="ss-facts small">${CONTROLES.map(([k, v]) => `<li>${celda(k)}${celda(v)}</li>`).join('')}</ul>
           </div>
         </div>
       </section>
 
       <section class="ss-cases" id="ss-pacientes">
-        <h2 class="ss-cases-title">Paciente</h2>
-        <div class="ss-case-grid" role="radiogroup" aria-label="Paciente"></div>
+        <h2 class="ss-cases-title" data-i18n="inicio.paciente"></h2>
+        <div class="ss-case-grid" role="radiogroup" data-i18n-aria="inicio.paciente"></div>
       </section>
 
       <section class="ss-history">
-        <h2 class="ss-cases-title">Tus intentos</h2>
+        <h2 class="ss-cases-title" data-i18n="inicio.intentos"></h2>
         <ul class="ss-history-list"></ul>
       </section>
     </div>`;
@@ -164,17 +164,15 @@ export function prepararInicio(
   let modo: Modo = 'practica';
   const grilla = capa.querySelector<HTMLElement>('.ss-case-grid')!;
   const tarjetas = CASOS.map((c) => {
-    const t = document.createElement('button');
-    t.type = 'button';
-    t.className = 'ss-case-card';
-    t.setAttribute('role', 'radio');
-    t.dataset.caso = c.id;
-    t.innerHTML = `<div class="ss-case-head"><span class="ss-diff ${CLASE_DIFICULTAD[c.dificultad]}"></span></div><b></b><span class="ss-case-best"></span><span class="ss-case-variant"></span>`;
-    t.querySelector('.ss-diff')!.textContent = c.dificultad;
-    t.querySelector('b')!.textContent = c.nombre;
-    t.querySelector('.ss-case-variant')!.textContent = c.descripcion;
-    t.addEventListener('click', () => { elegido = c.id; marcar(); });
-    return t;
+    const tarjeta = document.createElement('button');
+    tarjeta.type = 'button';
+    tarjeta.className = 'ss-case-card';
+    tarjeta.setAttribute('role', 'radio');
+    tarjeta.dataset.caso = c.id;
+    tarjeta.innerHTML = `<div class="ss-case-head"><span class="ss-diff ${c.nivel}" data-i18n="nivel.${c.nivel}"></span></div>`
+      + `<b data-i18n="caso.${c.id}.nombre"></b><span class="ss-case-best"></span><span class="ss-case-variant" data-i18n="caso.${c.id}.descripcion"></span>`;
+    tarjeta.addEventListener('click', () => { elegido = c.id; marcar(); });
+    return tarjeta;
   });
   // Tarjeta del paciente sorpresa
   const sorpresa = document.createElement('button');
@@ -182,45 +180,47 @@ export function prepararInicio(
   sorpresa.className = 'ss-case-card ss-case-sorpresa';
   sorpresa.setAttribute('role', 'radio');
   sorpresa.dataset.caso = SORPRESA;
-  sorpresa.innerHTML = '<div class="ss-case-head"><span class="ss-diff sorpresa">?</span></div><b>Paciente sorpresa</b><span class="ss-case-best"></span><span class="ss-case-variant"></span>';
-  sorpresa.querySelector('.ss-case-variant')!.textContent = DESCRIPCION_SORPRESA;
+  sorpresa.innerHTML = '<div class="ss-case-head"><span class="ss-diff sorpresa">?</span></div><b data-i18n="inicio.sorpresa"></b><span class="ss-case-best"></span><span class="ss-case-variant"></span>';
   sorpresa.addEventListener('click', () => { elegido = SORPRESA; marcar(); });
   tarjetas.push(sorpresa);
   grilla.replaceChildren(...tarjetas);
 
   const marcar = (): void => {
-    for (const t of tarjetas) {
-      const on = t.dataset.caso === elegido;
-      t.classList.toggle('on', on);
-      t.setAttribute('aria-checked', String(on));
+    for (const tarjeta of tarjetas) {
+      const on = tarjeta.dataset.caso === elegido;
+      tarjeta.classList.toggle('on', on);
+      tarjeta.setAttribute('aria-checked', String(on));
     }
     const c = CASOS.find((x) => x.id === elegido);
-    capa.querySelector('.ss-chosen-title')!.textContent = c?.nombre ?? 'Paciente sorpresa';
+    capa.querySelector('.ss-chosen-title')!.textContent = c?.nombre ?? t('inicio.sorpresa');
+    sorpresa.querySelector('.ss-case-variant')!.textContent = descripcionSorpresa();
     // En el examen no se dan las claves del paciente: solo la descripción
-    capa.querySelector('.ss-case')!.textContent = !c ? DESCRIPCION_SORPRESA
+    capa.querySelector('.ss-case')!.textContent = !c ? descripcionSorpresa()
       : modo === 'examen' ? c.descripcion : `${c.descripcion} ${c.claves}`;
     for (const b of capa.querySelectorAll<HTMLButtonElement>('[data-modo]')) {
       const on = b.dataset.modo === modo;
       b.classList.toggle('on', on);
       b.setAttribute('aria-checked', String(on));
     }
-    capa.querySelector('.ss-mode-note')!.textContent = NOTA_MODO[modo];
+    capa.querySelector('.ss-mode-note')!.textContent = notaModo(modo);
     dibujarHistorial();
   };
 
-  const fecha = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const fecha = (ms: number): string => new Intl.DateTimeFormat(infoIdioma().locale, {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+  }).format(ms);
   const dibujarHistorial = (): void => {
     const h = historial();
-    for (const t of tarjetas) {
-      if (t.dataset.caso === SORPRESA) continue;
-      const mejor = mejorPuntaje(h, t.dataset.caso as IdCaso);
-      t.querySelector('.ss-case-best')!.textContent = mejor === null ? '' : `Mejor examen: ${mejor}`;
+    for (const tarjeta of tarjetas) {
+      if (tarjeta.dataset.caso === SORPRESA) continue;
+      const mejor = mejorPuntaje(h, tarjeta.dataset.caso as IdCaso);
+      tarjeta.querySelector('.ss-case-best')!.textContent = mejor === null ? '' : t('inicio.mejor', { n: mejor });
     }
     const lista = capa.querySelector('.ss-history-list')!;
     if (!h.length) {
       const vacio = document.createElement('li');
       vacio.className = 'ss-attempt-empty';
-      vacio.textContent = 'Todavía no hay intentos. Al terminar un caso, queda aquí.';
+      vacio.textContent = t('inicio.vacio');
       lista.replaceChildren(vacio);
       return;
     }
@@ -230,8 +230,9 @@ export function prepararInicio(
       li.innerHTML = '<span class="ss-attempt-score mono"></span><span class="ss-attempt-main"><b></b><small></small></span><span class="ss-attempt-date"></span>';
       li.querySelector('.ss-attempt-score')!.textContent = String(i.puntaje);
       li.querySelector('b')!.textContent = CASOS.find((c) => c.id === i.caso)?.nombre ?? i.caso;
-      li.querySelector('small')!.textContent = `${i.modo === 'examen' ? 'Examen' : 'Práctica'} · ${i.calificacion}`;
-      li.querySelector('.ss-attempt-date')!.textContent = fecha.format(i.fecha);
+      // La nota se traduce; los intentos guardados antes de los idiomas solo tienen el texto
+      li.querySelector('small')!.textContent = `${tk(`modo.${i.modo}`)} · ${i.nota ? textoNota(i.nota) : i.calificacion}`;
+      li.querySelector('.ss-attempt-date')!.textContent = fecha(i.fecha);
       return li;
     }));
   };
@@ -266,7 +267,14 @@ export function prepararInicio(
     capa.scrollTop = 0;
     capa.querySelector<HTMLButtonElement>('.ss-entrar')!.focus({ preventScroll: true });
   };
-  marcar();
+  // Idioma: los textos fijos llevan data-i18n; el resto lo vuelve a escribir marcar()
+  capa.querySelector('.ss-lang')!.append(crearBotonesIdioma());
+  const traducir = (): void => {
+    aplicarIdioma(capa);
+    marcar();
+  };
+  alCambiarIdioma(traducir);
+  traducir();
   if (!leerNoMostrar()) abrir(elegido, modo);
   return { abrir };
 }

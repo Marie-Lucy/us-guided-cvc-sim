@@ -2,6 +2,7 @@
 // como parámetro (puede no existir en modo privado), así se puede testear.
 
 import type { IdCaso } from '../casos/casos';
+import type { Nota } from './evaluacion';
 import { CLAVE_HISTORIAL, HISTORIAL_MAXIMO } from '../config/examen';
 
 export type Modo = 'practica' | 'examen';
@@ -11,7 +12,8 @@ export interface Intento {
   modo: Modo;
   puntaje: number;
   exito: boolean;
-  calificacion: string;
+  calificacion: string; // texto en el idioma de ese momento (intentos viejos solo tienen esto)
+  nota?: Nota; // id de la nota: se traduce al mostrarla
   fecha: number; // ms desde 1970
 }
 

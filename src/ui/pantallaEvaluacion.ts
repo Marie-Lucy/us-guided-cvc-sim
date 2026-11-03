@@ -3,6 +3,7 @@
 import type { Resultado, Gravedad } from '../evaluacion/evaluacion';
 import type { Caso } from '../casos/casos';
 import { formatoTiempo } from './hud';
+import { t, tk } from '../i18n';
 
 function el<T extends HTMLElement>(id: string): T {
   const e = document.getElementById(id);
@@ -29,19 +30,19 @@ function items(r: Resultado): Item[] {
   return [
     {
       clase: r.intentos <= 1 ? 'ok' : 'warn',
-      titulo: 'Pinchazos',
+      titulo: t('eval.pinchazos'),
       valor: String(r.intentos),
-      texto: 'Cada pinchazo suma riesgo. Alinea sonda y aguja antes de entrar y sigue la punta.',
+      texto: t('eval.pinchazosTexto'),
     },
     {
       clase: 'ok',
-      titulo: 'Tiempo',
+      titulo: t('eval.tiempo'),
       valor: formatoTiempo(r.tiempoS),
-      texto: 'Sin apuro: la seguridad importa más que la velocidad. Descuenta pasados los 5 minutos.',
+      texto: t('eval.tiempoTexto'),
     },
-    ...r.complicaciones.map((c) => ({ clase: CLASE_GRAVEDAD[c.gravedad], titulo: c.titulo, valor: c.gravedad, texto: c.explicacion })),
-    ...r.aciertos.map((a) => ({ clase: 'ok' as const, titulo: 'Bien hecho', valor: '✓', texto: a })),
-    ...r.consejos.map((c) => ({ clase: 'warn' as const, titulo: 'Para la próxima', valor: '', texto: c })),
+    ...r.complicaciones.map((c) => ({ clase: CLASE_GRAVEDAD[c.gravedad], titulo: c.titulo, valor: tk(`gravedad.${c.gravedad}`), texto: c.explicacion })),
+    ...r.aciertos.map((a) => ({ clase: 'ok' as const, titulo: t('eval.bien'), valor: '✓', texto: a })),
+    ...r.consejos.map((c) => ({ clase: 'warn' as const, titulo: t('eval.proxima'), valor: '', texto: c })),
   ];
 }
 
@@ -57,12 +58,12 @@ export function mostrarEvaluacion(r: Resultado, c: Caso, sorpresa = false, demos
   v.textContent = r.calificacion;
   v.className = `db-verdict ${veredicto(r)}`;
   el('titulo-evaluacion').textContent = r.exito
-    ? (r.complicaciones.length ? 'Catéter en la vena, con complicaciones para revisar.' : 'Catéter en la vena, sin complicaciones.')
-    : 'El procedimiento no se completó de forma segura.';
-  const origen = demostracion ? 'Demostración · ' : sorpresa ? 'Paciente sorpresa: era ' : '';
-  el('caso-evaluado').textContent = `${origen}${c.nombre} · ${c.dificultad}${demostracion ? ' · no se guarda en tu historial' : ''}`;
+    ? t(r.complicaciones.length ? 'eval.exitoComplicado' : 'eval.exitoLimpio')
+    : t('eval.fallo');
+  const datos = { nombre: c.nombre, nivel: c.dificultad };
+  el('caso-evaluado').textContent = t(demostracion ? 'eval.casoDemo' : sorpresa ? 'eval.casoSorpresa' : 'eval.caso', datos);
   el('items-evaluacion').replaceChildren(...items(r).map(item));
-  el('claves-caso').textContent = `Claves de este paciente: ${c.claves}`;
+  el('claves-caso').textContent = t('eval.claves', { claves: c.claves });
   el('evaluacion').hidden = false;
   el<HTMLButtonElement>('repetir-caso').focus({ preventScroll: true });
 }

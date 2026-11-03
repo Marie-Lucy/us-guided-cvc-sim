@@ -42,6 +42,10 @@ Comparte la identidad visual de [Lab Theme](https://github.com/Marie-Lucy/lab-si
 | Variante anatómica | Avanzado | La yugular está encima de la carótida: atravesar la pared posterior es entrar a la arteria. |
 | Yugular trombosada | Avanzado | Un trombo oclusivo ocupa el tramo bajo y medio: la vena no colapsa, se ve gris por dentro, no tiene flujo ni refuerzo posterior. Hay que encontrar el tramo libre, más arriba. Puncionar el trombo no da flash y es una complicación grave. |
 
+### Idiomas
+
+Español, portugués e inglés, como los otros simuladores. Se elige con **ES · PT · EN** en la portada o con el selector de la barra superior, y se recuerda en el navegador. La primera vez se usa el idioma del navegador (si no es ninguno de los tres, inglés). Todo cambia al momento, incluida una evaluación abierta: pasos, mentor, avisos, etiquetas de la ecografía (VYI/ACC/ECM, IJV/CCA/SCM, VJI/ACC/ECM) y la vista 3D. En portugués los decimales llevan coma.
+
 ### Ver una demostración primero
 
 En la portada, **Ver una demostración primero** hace el caso normal solo, paso a paso: explora, comprime, enciende el Doppler, punciona, pasa la guía, la confirma en eje largo, dilata y coloca el catéter. El mentor narra cada paso. Con cualquier clic o tecla tomas el control y sigues desde donde quedó. Al terminar se muestra la evaluación, que no se guarda en el historial.
@@ -157,6 +161,7 @@ src/
   procedimiento/ técnica de Seldinger y ECG
   casos/         pacientes
   evaluacion/    registro de la sesión y evaluación final
+  i18n/          diccionarios (es de referencia, pt, en) y t(), fmt(), aplicarIdioma()
   ui/            HUD (procedimiento, mentor, barra, avisos), guía de pasos, inicio, evaluación, ECG, estilos
 ```
 

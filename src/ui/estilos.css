@@ -523,3 +523,16 @@ body[data-modo='examen'] .st-tasks { display: none; }
 @media (min-width: 1680px) and (min-height: 950px) {
   .hud { zoom: 1.15; }
 }
+
+/* ---------- Selectores de idioma (como en lab-sim) ---------- */
+.lang-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; background: #fff; }
+.lang-toggle button { background: transparent; border: 0; padding: 5px 11px; font: 600 11px var(--sans); color: var(--muted); cursor: pointer; }
+.lang-toggle button.active { background: var(--navy); color: #fff; }
+.lang-toggle button:hover:not(.active) { color: var(--navy); }
+.ss-lang-row { display: inline-flex; align-items: center; gap: 10px; }
+.ss-lang-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted-2); }
+.lang-select { appearance: none; -webkit-appearance: none; cursor: pointer; text-align: center; }
+@media (max-width: 720px) {
+  .ss-lang-lbl { display: none; }
+}
+.eco-head .chip, .topbar .chip { white-space: nowrap; }

@@ -4,6 +4,7 @@
 // Cualquier clic o tecla del usuario la detiene y le deja el control.
 
 import type { Fase } from '../config/fases';
+import { t, type Clave } from '../i18n';
 import type { Sonda, Orientacion } from '../sonda/sonda';
 import type { Corte } from '../anatomia/anatomia';
 import type { EstadoAguja } from '../aguja/aguja';
@@ -35,7 +36,7 @@ export interface DemoHost {
 }
 
 interface PasoDemo {
-  dice: string; // narración que muestra el mentor
+  dice: Clave; // narración que muestra el mentor (clave del diccionario)
   empezar?: (h: DemoHost) => void;
   manejar?: (h: DemoHost, t: number, dt: number) => void; // se llama en cada cuadro
   listo: (h: DemoHost, t: number) => boolean;
@@ -71,35 +72,35 @@ const pausa = (segundos: number) => (_h: DemoHost, t: number): boolean => t >= s
 
 export const PASOS_DEMO: readonly PasoDemo[] = [
   {
-    dice: 'Demostración: vamos a canalizar la yugular interna derecha. Haz clic o presiona una tecla cuando quieras tomar el control.',
+    dice: 'demo.intro',
     empezar: (h) => h.etiquetas(true),
     listo: pausa(D.DEMO_PAUSA_LARGA_S),
   },
   {
-    dice: 'Sonda transversal sobre el cuello, a unos 2,5 cm de la clavícula: el triángulo entre los dos haces del ECM.',
+    dice: 'demo.sonda',
     ...llevarSonda(() => D.DEMO_POSICION_SONDA_MM, () => 0),
   },
   {
-    dice: 'Dos vasos: la yugular, lateral y ovalada; la carótida, medial, redonda, con una pared más gruesa y pulsátil.',
+    dice: 'demo.vasos',
     listo: pausa(D.DEMO_PAUSA_LARGA_S),
   },
   {
-    dice: 'Comprimimos: la vena colapsa (unos 6 mmHg adentro) y la carótida no (75 mmHg o más).',
+    dice: 'demo.comprimir',
     manejar: (h, t) => h.fijarCompresion(Math.min(t / D.DEMO_SUBIDA_COMPRESION_S, 1)),
     listo: pausa(D.DEMO_SUBIDA_COMPRESION_S + D.DEMO_PAUSA_CORTA_S),
   },
   {
-    dice: 'Soltamos y la vena vuelve a llenarse.',
+    dice: 'demo.soltar',
     empezar: (h) => h.fijarCompresion(0),
     listo: pausa(D.DEMO_PAUSA_CORTA_S),
   },
   {
-    dice: 'Doppler color: rojo pulsátil en la carótida, azul continuo en la yugular.',
+    dice: 'demo.doppler',
     empezar: (h) => h.doppler(true),
     listo: pausa(D.DEMO_PAUSA_LARGA_S),
   },
   {
-    dice: 'Centramos la vena en la pantalla: la aguja va a entrar justo encima de ella.',
+    dice: 'demo.centrar',
     empezar: (h) => {
       h.doppler(false);
       h.etiquetas(false);
@@ -107,7 +108,7 @@ export const PASOS_DEMO: readonly PasoDemo[] = [
     ...llevarSonda(() => D.DEMO_POSICION_SONDA_MM, (h) => centroVena(h, D.DEMO_POSICION_SONDA_MM).x),
   },
   {
-    dice: 'Elegimos la entrada por encima de la sonda, en línea con la vena, con la aguja a 45°.',
+    dice: 'demo.entrada',
     empezar: (h) => {
       h.irA('puncion');
       h.cambiarAngulo(D.DEMO_ANGULO_AGUJA_GRADOS);
@@ -118,42 +119,42 @@ export const PASOS_DEMO: readonly PasoDemo[] = [
     listo: pausa(D.DEMO_PAUSA_CORTA_S),
   },
   {
-    dice: 'Avanzamos despacio. El punto brillante es donde la aguja cruza el haz: puede ser el cuerpo y no la punta.',
+    dice: 'demo.avanzar',
     manejar: (h, _t, dt) => h.moverAguja(D.DEMO_VELOCIDAD_AGUJA_MM_S * dt),
     listo: (h) => h.aguja().lugar === 'pared' || h.aguja().lugar === 'vena',
   },
   {
-    dice: 'La punta empuja la pared anterior y la hunde: es la tienda. Un poco más, sin apurarse…',
+    dice: 'demo.tienda',
     manejar: (h, _t, dt) => h.moverAguja(D.DEMO_VELOCIDAD_AGUJA_LENTA_MM_S * dt),
     listo: (h) => h.aguja().lugar === 'vena',
   },
   {
-    dice: 'Flash de sangre oscura en la jeringa: estamos en la vena. La aguja ya no se mueve.',
+    dice: 'demo.flash',
     listo: (h, t) => t >= D.DEMO_PAUSA_S && h.aguja().flash.cantidad > 0,
   },
   {
-    dice: 'Pasamos la guía por la aguja: avanza sin resistencia porque la punta está en la luz.',
+    dice: 'demo.guia',
     empezar: (h) => h.irA('guia'),
     manejar: (h, _t, dt) => h.moverGuia(Math.min(D.DEMO_VELOCIDAD_GUIA_MM_S * dt, D.DEMO_GUIA_MM - (h.seldinger()?.guia.insertadaMm ?? 0))),
     listo: (h) => (h.seldinger()?.guia.insertadaMm ?? 0) >= D.DEMO_GUIA_MM,
   },
   {
-    dice: 'Retiramos la aguja y la guía queda adentro. Ojo con el monitor: si la guía llega al corazón, aparecen extrasístoles.',
+    dice: 'demo.retirarAguja',
     empezar: (h) => h.retirarAguja(),
     listo: pausa(D.DEMO_PAUSA_S),
   },
   {
-    dice: 'Giramos la sonda a eje largo y la alineamos con la vena: la guía se ve como una línea brillante dentro de la luz.',
+    dice: 'demo.ejeLargo',
     empezar: (h) => h.orientar('longitudinal'),
     ...llevarSonda(() => D.DEMO_POSICION_EJE_LARGO_MM, (h) => centroVena(h, D.DEMO_POSICION_EJE_LARGO_MM).x),
   },
   {
-    dice: 'Guía confirmada dentro de la vena. Recién ahora es seguro dilatar.',
+    dice: 'demo.confirmada',
     empezar: (h) => { h.confirmarGuia(); },
     listo: pausa(D.DEMO_PAUSA_S),
   },
   {
-    dice: 'El dilatador pasa sobre la guía y abre la piel y el tejido, solo hasta la pared de la vena.',
+    dice: 'demo.dilatar',
     empezar: (h) => {
       h.orientar('transversal');
       h.irA('dilatacion');
@@ -165,23 +166,23 @@ export const PASOS_DEMO: readonly PasoDemo[] = [
     },
   },
   {
-    dice: 'Retiramos el dilatador dejando la guía.',
+    dice: 'demo.retirarDilatador',
     manejar: (h, _t, dt) => h.moverDilatador(-D.DEMO_VELOCIDAD_DILATADOR_MM_S * dt),
     listo: (h) => (h.seldinger()?.dilatador.mm ?? 0) === 0,
   },
   {
-    dice: 'El catéter sigue a la guía hasta 14 cm desde la piel: la punta queda en la vena cava superior.',
+    dice: 'demo.cateter',
     empezar: (h) => h.irA('cateter'),
     manejar: (h, _t, dt) => h.moverCateter(Math.min(D.DEMO_VELOCIDAD_CATETER_MM_S * dt, D.DEMO_CATETER_MM - (h.seldinger()?.cateter.mm ?? 0))),
     listo: (h) => (h.seldinger()?.cateter.mm ?? 0) >= D.DEMO_CATETER_MM,
   },
   {
-    dice: 'Retiramos la guía. El catéter queda colocado.',
+    dice: 'demo.retirarGuia',
     empezar: (h) => h.retirarGuia(),
     listo: pausa(D.DEMO_PAUSA_S),
   },
   {
-    dice: 'Listo. Ahora veamos la evaluación.',
+    dice: 'demo.fin',
     listo: pausa(D.DEMO_PAUSA_CORTA_S),
   },
 ];
@@ -197,7 +198,7 @@ export class Demo {
   constructor(private readonly host: DemoHost, private readonly pasos: readonly PasoDemo[] = PASOS_DEMO) {}
 
   get narracion(): string {
-    return this.pasos[Math.min(this.indice, this.pasos.length - 1)].dice;
+    return t(this.pasos[Math.min(this.indice, this.pasos.length - 1)].dice);
   }
 
   get total(): number {

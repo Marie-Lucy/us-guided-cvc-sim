@@ -125,7 +125,7 @@ Cada etapa deja algo jugable. Una etapa por sesión, un commit por etapa.
 
 Los detalles de cada etapa los da el usuario al inicio de cada sesión.
 
-**Estado actual:** las 8 etapas terminadas, interfaz con la identidad de `lab-sim`, más **modo examen** (`config/examen.ts`, `evaluacion/historial.ts`: sin ayudas, 8 min, historial y mejor puntaje en localStorage) **paciente con trombosis** (`trombo` en la `Anatomia`), paciente sorpresa y **Ver una demostración primero** (`procedimiento/demo.ts`). Próximos extras posibles: subclavia/femoral, aguja en plano como técnica propia.
+**Estado actual:** las 8 etapas terminadas, interfaz con la identidad de `lab-sim`, más **modo examen** (`config/examen.ts`, `evaluacion/historial.ts`: sin ayudas, 8 min, historial y mejor puntaje en localStorage) **paciente con trombosis** (`trombo` en la `Anatomia`), paciente sorpresa **Ver una demostración primero** (`procedimiento/demo.ts`) e **idiomas** ES · PT · EN (`src/i18n/`). Próximos extras posibles: subclavia/femoral, aguja en plano como técnica propia.
 
 ## Estilo visual
 
@@ -140,7 +140,7 @@ La interfaz comparte identidad con `lab-sim` (Lab Theme) y `brain-surgery-sim`. 
 
 ## Convenciones
 
-- Comentarios e interfaz en **español**.
+- Comentarios en **español**. Interfaz en **español, portugués e inglés** (`src/i18n/`): ningún texto visible va escrito en el código; se usa `t('clave')` (o `tk` para claves armadas) y el HTML fijo lleva `data-i18n` / `data-i18n-aria` / `data-i18n-title`. `es.ts` es la referencia: toda clave nueva va en los tres diccionarios (lo verifica `tests/i18n.test.ts`). Los objetos con textos (`INFO_PASOS`, `CASOS`) usan getters para seguir al idioma sin reconstruirse; el historial guarda la `nota` como id. Decimales visibles con `fmt()`.
 - Calibración de la imagen: las reflectividades son amplitudes relativas (1 = reflector muy fuerte); se ven a través de la compresión logarítmica (`PISO_DB`, `RANGO_DINAMICO_DB`). Para ajustar el aspecto, mover primero esas dos y la ganancia, no cada tejido.
 - Funciones pequeñas, con una sola responsabilidad.
 - **Nada de números mágicos:** toda constante va con nombre en `src/config/`.
